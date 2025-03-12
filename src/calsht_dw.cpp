@@ -1,7 +1,6 @@
 #include "calsht_dw.hpp"
 #include "hash.hpp"
 #include <algorithm>
-#include <format>
 #include <fstream>
 #include <stdexcept>
 #include <type_traits>
@@ -117,7 +116,7 @@ void CalshtDW::read_file(Iter first, Iter last, std::filesystem::path file) cons
   std::ifstream fin(file, std::ios_base::in | std::ios_base::binary);
 
   if (!fin) {
-    throw std::runtime_error(std::format("Reading file does not exist: {}", file.string()));
+    throw std::runtime_error("Reading file does not exist");
   }
 
   for (; first != last; ++first) {
@@ -248,22 +247,22 @@ std::tuple<int, int, uint64_t, uint64_t> CalshtDW::operator()(const std::vector<
 
     for (int i = 0; i < NUM_TIDS; ++i) {
       if (t[i] < 0 || t[i] > 4) {
-        throw std::invalid_argument(std::format("Invalid number of hand's tiles at {}: {}", i, t[i]));
+        throw std::invalid_argument("Invalid number of hand's tiles at {}: {}");
       }
 
       ++n;
     }
 
     if (ENABLE_NYANTEN && n > 14) {
-      throw std::invalid_argument(std::format("Invalid sum of hand's tiles: {}", n));
+      throw std::invalid_argument("Invalid sum of hand's tiles");
     }
 
     if (m < 0 || m > 4) {
-      throw std::invalid_argument(std::format("Invalid sum of hands's melds: {}", m));
+      throw std::invalid_argument("Invalid sum of hands's melds");
     }
 
     if (mode < 0 || mode > 7) {
-      throw std::invalid_argument(std::format("Invalid caluculation mode: {}", mode));
+      throw std::invalid_argument("Invalid caluculation mode");
     }
   }
 

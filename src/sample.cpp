@@ -3,7 +3,6 @@
 #include <array>
 #include <cassert>
 #include <filesystem>
-#include <format>
 #include <iostream>
 #include <random>
 #include <utility>
@@ -17,7 +16,7 @@
 int main(int argc, char* argv[])
 {
   if (argc != 3) {
-    std::cerr << std::format("Usage: {} [Number of Rounds] [Whether three player]\n", argv[0]);
+    std::cerr << "Usage: {argv[0]} [Number of Rounds] [Whether three player]\n";
     return 1;
   }
 
@@ -110,9 +109,9 @@ int main(int argc, char* argv[])
     }
   }
 
-  std::cout << std::format("{:<24s}{:<16d}\n", "Number of Tiles", NUM_TILES);
-  std::cout << std::format("{:<24s}{:<16d}\n", "Number of Rounds", NUM_ROUNDS);
-  std::cout << std::format("Turn\tShanten Number (-1 - 6)\tHora\tTempai\tExp.\n");
+//  std::cout << std::format("{:<24s}{:<16d}\n", "Number of Tiles", NUM_TILES);
+//  std::cout << std::format("{:<24s}{:<16d}\n", "Number of Rounds", NUM_ROUNDS);
+//  std::cout << std::format("Turn\tShanten Number (-1 - 6)\tHora\tTempai\tExp.\n");
 
   for (int i = 0; i < NUM_TURNS; ++i) {
     std::cout << i << "\t";
