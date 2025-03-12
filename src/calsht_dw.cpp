@@ -7,10 +7,6 @@
 #include <Python.h>
 #include <filesystem>
 #include <string>
-#include <pybind11/embed.h>
-
-namespace py = pybind11;
-
 constexpr int NUM_TIDS = 34;
 const std::conditional<ENABLE_NYANTEN, NyantenHash<9>, DefaultHash<9>>::type hash1;
 const std::conditional<ENABLE_NYANTEN, NyantenHash<7>, DefaultHash<7>>::type hash2;
@@ -256,14 +252,11 @@ std::filesystem::path get_module_path() {
 }
 
 void CalshtDW::initialize() {
-    py::scoped_interpreter guard{};
-    py::module importlib_resources = py::module::import_("importlib.resources");
-    py::module pymahjong = py::module::import_("pymahjong");
+    std::filesystem::path module_path = get_module_path();
+    std::filesystem::path data_dir = module_path.parent_path() / "data";
 
-    std::string data_dir = importlib_resources.attr("files")(pymahjong).attr("joinpath")("data").attr("__fspath__")().cast<std::string>();
-
-    read_file(mp1.begin(), mp1.end(), data_dir + "/index_dw_s.bin");
-    read_file(mp2.begin(), mp2.end(), data_dir + "/index_dw_h.bin");
+    read_file(mp1.begin(), mp1.end(), data_dir / "index_dw_s.bin");
+    read_file(mp2.begin(), mp2.end(), data_dir / "index_dw_h.bin");
 }
 
 std::tuple<int, int, uint64_t, uint64_t> CalshtDW::operator()(const std::vector<int>& t,
