@@ -1,0 +1,1 @@
+from pymahjong._pymahjong import *
