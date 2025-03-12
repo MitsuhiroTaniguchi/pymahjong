@@ -4,7 +4,6 @@ import subprocess
 import setuptools
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
-import pybind11
 
 
 class CMakeBuild(build_ext):
@@ -28,21 +27,9 @@ ext_modules = [
 
 setup(
     name="pymahjong",
-    version="0.1",
-    author="Mitsuhiro Taniguchi",
-    description="fast mahjong tools",
-    ext_modules=[
-        Extension(
-            "pymahjong",
-            [
-                "src/bindings.cpp",
-                "src/calsht_dw.cpp",
-            ],
-            include_dirs=[pybind11.get_include()],  # pybind11のヘッダーパスを取得
-            language="c++",
-            extra_compile_args=["-std=c++20"]
-        ),
-    ],
+    version="0.1.0",
+    packages=setuptools.find_packages(),
+    ext_modules=ext_modules,
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
 )
