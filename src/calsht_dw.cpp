@@ -231,7 +231,9 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::vector<int>& t)
 }
 
 void CalshtDW::initialize() {
-    std::filesystem::path data_dir = std::filesystem::path(__FILE__).parent_path().parent_path() / "data";
+    std::filesystem::path module_path = get_module_path();
+    std::filesystem::path data_dir = module_path.parent_path() / "data";
+
     read_file(mp1.begin(), mp1.end(), data_dir / "index_dw_s.bin");
     read_file(mp2.begin(), mp2.end(), data_dir / "index_dw_h.bin");
 }
