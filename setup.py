@@ -120,7 +120,7 @@ class CMakeBuild(build_ext):
             ["cmake", ext.sourcedir, "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++"] + cmake_args, cwd=build_temp, check=True
         )
         subprocess.run(
-            ["cmake", "--build", "."] + build_args, cwd=build_temp, check=False
+            ["cmake", "--build", "."] + build_args, cwd=build_temp, check=True
         )
 
 
