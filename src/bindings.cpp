@@ -10,7 +10,6 @@ PYBIND11_MODULE(pymahjong, m) {
 
     py::class_<CalshtDW>(m, "Xiangting")
      .def(py::init<>())
-     .def("initialize", &CalshtDW::initialize, "Initialize the model with a directory")
      .def("calculate", &CalshtDW::operator(), "Calculate Xiangting reduction",
           py::arg("hand"), py::arg("size"), py::arg("mode"),
           py::arg("check_hand") = false, py::arg("three_player") = false);

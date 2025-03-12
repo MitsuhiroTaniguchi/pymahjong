@@ -28,11 +28,14 @@ private:
                                               bool three_player = false) const;
   std::tuple<int, uint64_t, uint64_t> calc_to(const std::vector<int>& t) const;
 
+  void initialize();
+
 public:
   CalshtDW()
       : mp1(ENABLE_NYANTEN ? 405350 : 1953125, RVec(30)),
-        mp2(ENABLE_NYANTEN ? 43130 : 78125, RVec(30)) {}
-  void initialize();
+        mp2(ENABLE_NYANTEN ? 43130 : 78125, RVec(30)) {
+      initialize();
+  }
   std::tuple<int, int, uint64_t, uint64_t> operator()(const std::vector<int>& t,
                                                       int m,
                                                       int mode,
