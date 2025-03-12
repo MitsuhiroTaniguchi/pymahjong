@@ -5,8 +5,8 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(necessary_and_unnecessary_tiles, m) {
-    m.doc() = "Python bindings for necessary-and-unnecessary-tiles"; // モジュールの説明
+PYBIND11_MODULE(pymahjong, m) {
+    m.doc() = "pymahjong"; // モジュールの説明
 
     py::class_<CalshtDW>(m, "Xiangting")
      .def(py::init<>())
