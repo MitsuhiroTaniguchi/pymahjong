@@ -8,10 +8,10 @@ set(CMAKE_CXX_FLAGS_DEBUG "-O0 -Wall -Wextra -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
 
 find_package(pybind11 CONFIG REQUIRED)
-pybind11_add_module(_pymahjong_module src/bindings.cpp src/calsht_dw.cpp)
+pybind11_add_module(_pymahjong src/bindings.cpp src/calsht_dw.cpp)
 
-target_include_directories(_pymahjong_module PRIVATE src)
+target_include_directories(_pymahjong PRIVATE src)
 
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
-target_compile_definitions(_pymahjong_module PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+target_compile_definitions(_pymahjong PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
