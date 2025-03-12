@@ -1,1 +1,0 @@
-import pymahjong._pymahjong as pymahjong
