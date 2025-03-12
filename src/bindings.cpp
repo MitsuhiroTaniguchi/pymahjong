@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(pymahjong, m) {
+PYBIND11_MODULE(_pymahjong, m) {
     m.doc() = "pymahjong"; // モジュールの説明
 
     py::class_<CalshtDW>(m, "Xiangting")
