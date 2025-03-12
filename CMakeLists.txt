@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 cmake_policy(SET CMP0057 NEW)
 
-project(pymahjong)
+project(_pymahjong)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -Wall -Wextra -g")
