@@ -4,9 +4,6 @@
 #include <fstream>
 #include <stdexcept>
 #include <type_traits>
-#include <Python.h>
-#include <filesystem>
-#include <string>
 constexpr int NUM_TIDS = 34;
 const std::conditional<ENABLE_NYANTEN, NyantenHash<9>, DefaultHash<9>>::type hash1;
 const std::conditional<ENABLE_NYANTEN, NyantenHash<7>, DefaultHash<7>>::type hash2;
@@ -119,7 +116,7 @@ void CalshtDW::read_file(Iter first, Iter last, std::filesystem::path file) cons
   std::ifstream fin(file, std::ios_base::in | std::ios_base::binary);
 
   if (!fin) {
-    throw std::runtime_error(file);
+    throw std::runtime_error("Reading file does not exist");
   }
 
   for (; first != last; ++first) {
@@ -233,28 +230,8 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::vector<int>& t)
   return {14 - kind - (pair > 0 ? 1 : 0), disc, wait};
 }
 
-std::filesystem::path get_module_path() {
-    PyObject* module = PyImport_ImportModule("pymahjong");
-    if (!module) {
-        throw std::runtime_error("Failed to import module 'pymahjong'");
-    }
-    PyObject* file_attr = PyObject_GetAttrString(module, "__file__");
-    Py_DECREF(module);
-    if (!file_attr) {
-        throw std::runtime_error("Module 'pymahjong' has no __file__ attribute");
-    }
-    const char* path_c = PyUnicode_AsUTF8(file_attr);
-    Py_DECREF(file_attr);
-    if (!path_c) {
-        throw std::runtime_error("Failed to get module file path");
-    }
-    return std::filesystem::path(path_c);
-}
-
 void CalshtDW::initialize() {
-    std::filesystem::path module_path = get_module_path();
-    std::filesystem::path data_dir = module_path.parent_path() / "data";
-
+    std::filesystem::path data_dir = std::filesystem::path(__FILE__).parent_path().parent_path() / "data";
     read_file(mp1.begin(), mp1.end(), data_dir / "index_dw_s.bin");
     read_file(mp2.begin(), mp2.end(), data_dir / "index_dw_h.bin");
 }
