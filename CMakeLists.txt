@@ -15,6 +15,3 @@ target_include_directories(pymahjong PRIVATE src)
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.
 target_compile_definitions(pymahjong PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
-
-# copy data
-install(DIRECTORY data/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/data)
