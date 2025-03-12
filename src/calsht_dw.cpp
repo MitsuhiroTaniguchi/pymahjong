@@ -4,6 +4,9 @@
 #include <fstream>
 #include <stdexcept>
 #include <type_traits>
+#include <Python.h>
+#include <filesystem>
+#include <string>
 constexpr int NUM_TIDS = 34;
 const std::conditional<ENABLE_NYANTEN, NyantenHash<9>, DefaultHash<9>>::type hash1;
 const std::conditional<ENABLE_NYANTEN, NyantenHash<7>, DefaultHash<7>>::type hash2;
@@ -228,6 +231,25 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::vector<int>& t)
   else if (pair == 0) wait |= wait_;
 
   return {14 - kind - (pair > 0 ? 1 : 0), disc, wait};
+}
+
+std::filesystem::path get_module_path() {
+    // "pymahjong" はモジュール名です
+    PyObject* module = PyImport_ImportModule("pymahjong");
+    if (!module) {
+        throw std::runtime_error("Failed to import module 'pymahjong'");
+    }
+    PyObject* file_attr = PyObject_GetAttrString(module, "__file__");
+    Py_DECREF(module);
+    if (!file_attr) {
+        throw std::runtime_error("Module 'pymahjong' has no __file__ attribute");
+    }
+    const char* path_c = PyUnicode_AsUTF8(file_attr);
+    Py_DECREF(file_attr);
+    if (!path_c) {
+        throw std::runtime_error("Failed to get module file path");
+    }
+    return std::filesystem::path(path_c);
 }
 
 void CalshtDW::initialize() {
