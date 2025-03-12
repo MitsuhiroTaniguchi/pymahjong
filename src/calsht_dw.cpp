@@ -119,7 +119,7 @@ void CalshtDW::read_file(Iter first, Iter last, std::filesystem::path file) cons
   std::ifstream fin(file, std::ios_base::in | std::ios_base::binary);
 
   if (!fin) {
-    throw std::runtime_error("Reading file does not exist");
+    throw std::runtime_error(file);
   }
 
   for (; first != last; ++first) {
