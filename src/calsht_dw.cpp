@@ -234,7 +234,6 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::vector<int>& t)
 }
 
 std::filesystem::path get_module_path() {
-    // "pymahjong" はモジュール名です
     PyObject* module = PyImport_ImportModule("pymahjong");
     if (!module) {
         throw std::runtime_error("Failed to import module 'pymahjong'");

@@ -141,7 +141,7 @@ setup(
     author_email="michw.com.sub@gmail.com",
     description="fast mahjong tools written in c++ with pybind 11",
     long_description="",
-    ext_modules=[CMakeExtension("pymahjong")],
+    ext_modules=[CMakeExtension("pymahjong._pymahjong")],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},
