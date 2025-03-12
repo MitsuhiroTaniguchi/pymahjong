@@ -1,1 +1,1 @@
-from ._pymahjong import *
+import pymahjong._pymahjong as pymahjong
