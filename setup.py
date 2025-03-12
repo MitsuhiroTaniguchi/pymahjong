@@ -27,6 +27,14 @@ class CMakeExtension(Extension):
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext: CMakeExtension) -> None:
+        # pybind11 CMake CMAKE_PREFIX_PATH
+        try:
+            import pybind11
+            cmake_prefix = pybind11.get_cmake_dir()
+            os.environ["CMAKE_PREFIX_PATH"] = cmake_prefix + os.pathsep + os.environ.get("CMAKE_PREFIX_PATH", "")
+        except ImportError:
+            pass
+
         # Must be in this form due to bug in .resolve() only fixed in Python 3.10+
         ext_fullpath = Path.cwd() / self.get_ext_fullpath(ext.name)  # type: ignore[no-untyped-call]
         extdir = ext_fullpath.parent.resolve()
