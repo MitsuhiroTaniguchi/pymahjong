@@ -148,4 +148,5 @@ setup(
     python_requires=">=3.6",
     install_requires=["pybind11"],
     packages=find_packages(),
+    package_data={'pymahjong': ['data/*']},
 )
