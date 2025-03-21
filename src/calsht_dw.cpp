@@ -1,5 +1,6 @@
 #include "calsht_dw.hpp"
 #include "hash.hpp"
+#include <array>
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
@@ -134,7 +135,7 @@ void CalshtDW::read_file(Iter first, Iter last, std::filesystem::path file) cons
   }
 }
 
-std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_lh(const std::vector<int>& t,
+std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_lh(const std::array<int, 34>& t,
                                                       const int m,
                                                       const bool three_player) const
 {
@@ -156,7 +157,7 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_lh(const std::vector<int>& t,
   return {static_cast<int>(ret[m + 5]), ret[m + 15], ret[m + 25]};
 }
 
-std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_sp(const std::vector<int>& t,
+std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_sp(const std::array<int, 34>& t,
                                                       const bool three_player) const
 {
   int pair = 0;
@@ -194,7 +195,7 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_sp(const std::vector<int>& t,
   return {7 - pair + (kind < 7 ? 7 - kind : 0), disc, wait};
 }
 
-std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::vector<int>& t) const
+std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::array<int, 34>& t) const
 {
   int pair = 0;
   int kind = 0;
@@ -259,7 +260,7 @@ void CalshtDW::initialize() {
     read_file(mp2.begin(), mp2.end(), data_dir / "index_dw_h.bin");
 }
 
-std::tuple<int, int, uint64_t, uint64_t> CalshtDW::operator()(const std::vector<int>& t,
+std::tuple<int, int, uint64_t, uint64_t> CalshtDW::operator()(const std::array<int, 34>& t,
                                                               const int m,
                                                               const int mode,
                                                               const bool check_hand,
