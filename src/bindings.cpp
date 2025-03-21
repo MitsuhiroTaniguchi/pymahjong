@@ -14,6 +14,13 @@ namespace py = pybind11;
 PYBIND11_MODULE(pymahjong, m) {
     m.doc() = "pymahjong: mahjong calculation library written in c++ with python bindings";
 
+    // Xiangting (CalshtDW) のバインディング
+    py::class_<CalshtDW>(m, "Xiangting")
+        .def(py::init<>())
+        .def("calculate", &CalshtDW::operator(),
+             py::arg("hand"), py::arg("size"), py::arg("mode"),
+             py::arg("check_hand") = false, py::arg("three_player") = false);
+
     // Mianzi の enum バインディング
     py::enum_<Mianzi::Type>(m, "MianziType")
         .value("shunzi", Mianzi::Type::shunzi)
