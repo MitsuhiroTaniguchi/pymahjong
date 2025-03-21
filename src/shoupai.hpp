@@ -3,25 +3,26 @@
 
 #include <vector>
 #include <array>
+#include <stdexcept>
 #include <bitset>
 #include "calsht_dw.hpp"
 #include "action.hpp"
 #include "mianzi.hpp"
 
-inline CalshtDW cal_dw{};
+inline CalshtDW cal_dw;
 
 struct Shoupai {
     std::array<int, 34> bing;
     std::vector<Mianzi> fulu;
 
-    int xiangting{}, mode{};
-    std::bitset<34> tingpai{};
+    int xiangting = -1, mode = 0;
+    std::bitset<34> tingpai;
 
     std::bitset<3> red;
 
-    Shoupai() : bing{} {}
-    explicit Shoupai(const std::array<int, 34>& bing) : bing{bing} {}
-    Shoupai(const std::array<int, 34>& bing, const std::vector<Mianzi>& fulu) : bing{bing}, fulu{fulu} {}
+    Shoupai() : bing{} { eval(); }
+    explicit Shoupai(const std::array<int, 34>& bing) : bing{bing} { eval(); }
+    Shoupai(const std::array<int, 34>& bing, const std::vector<Mianzi>& fulu) : bing{bing}, fulu{fulu} { eval(); }
 
     void apply(const Action& action) {
         int p = action.pai_34;
@@ -46,14 +47,17 @@ struct Shoupai {
         }
         case Action::peng:
             bing[p] -= 2;
+            if (action.red) red.reset(p / 9);
             fulu.emplace_back(Mianzi::peng, p);
             return;
         case Action::minggang:
             bing[p] -= 3;
+            if (p < 27 && p % 9 == 4) red.reset(p / 9);
             fulu.emplace_back(Mianzi::minggang, p);
             return;
         case Action::angang:
             bing[p] -= 4;
+            if (p < 27 && p % 9 == 4) red.reset(p / 9);
             fulu.emplace_back(Mianzi::angang, p);
             return;
         case Action::jiagang:
@@ -63,14 +67,13 @@ struct Shoupai {
                     return;
                 }
             }
-            __builtin_unreachable();
         default:;
         }
     }
 
     void eval() {
         auto [x, m, d, w] = cal_dw(bing, fulu.size() / 3, 7);
-        xiangting = x;
+        xiangting = x - 1;
         mode = m;
         tingpai = std::bitset<34>(w);
     }

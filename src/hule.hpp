@@ -5,8 +5,6 @@
 #include "shoupai.hpp"
 #include <algorithm>
 #include <vector>
-#include <cassert>
-#include <ranges>
 
 #include "action.hpp"
 #include "hupai.hpp"
@@ -36,7 +34,7 @@ struct Hule {
     Hupai hupai;
     
     std::vector<std::vector<Mianzi>> _possible_hands;
-    bool is_hule;
+    bool has_hupai;
 
     void rec(int p, const bool head_unknown=true) {
         if (hand.size() == 5 - shoupai.fulu.size()) {
@@ -234,8 +232,7 @@ struct Hule {
             }
             h.純正九蓮宝燈 = h.九蓮宝燈 && head == hule_action.pai_34;
 
-            h.preset(option.is_menqian);
-            auto [fanshu, damanguan] = h.sum();
+            auto [fanshu, damanguan] = h.sum(option.is_menqian);
             uint64_t rank = damanguan << 32 | fanshu << 16 || fu;
             if (rank > max_rank) {
                 max_rank = rank;
@@ -245,24 +242,21 @@ struct Hule {
                 this->hupai = h;
             }
         }
-        return damanguan || fanshu;
+        return fanshu || damanguan;
     }
 
     Hule(const Shoupai& shoupai, const Action& action, const HuleOption& option) : shoupai{shoupai}, hule_action(action), option{option} {
-        assert (shoupai.xiangting == -1);
-        assert (action.type == Action::zimohu || action.type == Action::ronghu);
         hupai = {};
         if (shoupai.mode >> 2) {
             hupai.国士無双 = shoupai.bing[action.pai_34] == 1;
             hupai.国士無双１３面 = not hupai.国士無双;
-            hupai.preset(true);
             fu = action.type == Action::zimohu ? 30 : 40;
-            std::tie(fanshu, damanguan) = hupai.sum();
-            is_hule = true;
+            std::tie(fanshu, damanguan) = hupai.sum(option.is_menqian);
+            has_hupai = true;
             return;
         }
         rec(0);
-        is_hule = eval_possible_hands();
+        has_hupai = eval_possible_hands();
     }
 };
 

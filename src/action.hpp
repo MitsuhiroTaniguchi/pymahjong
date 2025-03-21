@@ -19,10 +19,10 @@ struct Action {
     } type;
 
     int pai_34;
-    std::optional<bool> red;
+    bool red;
     std::optional<int> bias;
 
-    Action(Type type, int pai_136) : type(type), pai_34(pai_136) {}
+    Action(Type type, int pai_136) : type(type), pai_34(pai_136), red(false) {}
     Action(Type type, int pai_136, bool red) : type(type), pai_34(pai_136), red(red) {}
     Action(Type type, int pai_136, bool red, int bias) : type(type), pai_34(pai_136), red(red), bias(bias) {}
 };
