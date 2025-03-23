@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -Wall -Wextra -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -Wextra")
 
+set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 find_package(pybind11 CONFIG REQUIRED)
 pybind11_add_module(pymahjong src/bindings.cpp src/calsht_dw.cpp)
 
