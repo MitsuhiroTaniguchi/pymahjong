@@ -1,3 +1,4 @@
+#pragma once
 #ifndef CALSHT_DW_HPP
 #define CALSHT_DW_HPP
 
