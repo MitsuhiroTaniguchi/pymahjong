@@ -6,7 +6,7 @@
 #include "shoupai.hpp"
 #include "mianzi.hpp"
 #include "hupai.hpp"
-//#include "hule.hpp"
+#include "hule.hpp"
 #include "action.hpp"
 
 namespace py = pybind11;
@@ -99,35 +99,35 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("四槓子", &Hupai::四槓子)
         .def_readwrite("九蓮宝燈", &Hupai::九蓮宝燈)
         .def_readwrite("純正九蓮宝燈", &Hupai::純正九蓮宝燈);
-//
-//    // HuleOption のバインディング
-//    py::class_<HuleOption>(m, "HuleOption")
-//        .def(py::init<int, int>(), py::arg("zhuangfeng"), py::arg("lunban"))
-//        .def_readwrite("is_menqian", &HuleOption::is_menqian)
-//        .def_readwrite("is_lizhi", &HuleOption::is_lizhi)
-//        .def_readwrite("is_shuanglizhi", &HuleOption::is_shuanglizhi)
-//        .def_readwrite("is_yifa", &HuleOption::is_yifa)
-//        .def_readwrite("is_haidi", &HuleOption::is_haidi)
-//        .def_readwrite("is_lingshang", &HuleOption::is_lingshang)
-//        .def_readwrite("is_qianggang", &HuleOption::is_qianggang)
-//        .def_readwrite("is_init_turn_and_no_call", &HuleOption::is_init_turn_and_no_call)
-//        .def_readwrite("zhuangfeng", &HuleOption::zhuangfeng)
-//        .def_readwrite("lunban", &HuleOption::lunban);
-//
-//    // Hule クラスのバインディング
-//    py::class_<Hule>(m, "Hule")
-//        .def(py::init<const Shoupai&, const Action&, const HuleOption&>(),
-//             py::arg("shoupai"), py::arg("action"), py::arg("option"))
-//        .def_readwrite("hand", &Hule::hand)
-//        .def_readwrite("shoupai", &Hule::shoupai)
-//        .def_readwrite("fu", &Hule::fu)
-//        .def_readwrite("fanshu", &Hule::fanshu)
-//        .def_readwrite("damanguan", &Hule::damanguan)
-//        .def_readwrite("hule_action", &Hule::hule_action)
-//        .def_readwrite("option", &Hule::option)
-//        .def_readwrite("hupai", &Hule::hupai)
-//        .def_readwrite("has_hupai", &Hule::has_hupai);
-//
+
+    // HuleOption のバインディング
+    py::class_<HuleOption>(m, "HuleOption")
+        .def(py::init<int, int>(), py::arg("zhuangfeng"), py::arg("lunban"))
+        .def_readwrite("is_menqian", &HuleOption::is_menqian)
+        .def_readwrite("is_lizhi", &HuleOption::is_lizhi)
+        .def_readwrite("is_shuanglizhi", &HuleOption::is_shuanglizhi)
+        .def_readwrite("is_yifa", &HuleOption::is_yifa)
+        .def_readwrite("is_haidi", &HuleOption::is_haidi)
+        .def_readwrite("is_lingshang", &HuleOption::is_lingshang)
+        .def_readwrite("is_qianggang", &HuleOption::is_qianggang)
+        .def_readwrite("is_init_turn_and_no_call", &HuleOption::is_init_turn_and_no_call)
+        .def_readwrite("zhuangfeng", &HuleOption::zhuangfeng)
+        .def_readwrite("lunban", &HuleOption::lunban);
+
+    // Hule クラスのバインディング
+    py::class_<Hule>(m, "Hule")
+        .def(py::init<const Shoupai&, const Action&, const HuleOption&>(),
+             py::arg("shoupai"), py::arg("action"), py::arg("option"))
+        .def_readwrite("hand", &Hule::hand)
+        .def_readwrite("shoupai", &Hule::shoupai)
+        .def_readwrite("fu", &Hule::fu)
+        .def_readwrite("fanshu", &Hule::fanshu)
+        .def_readwrite("damanguan", &Hule::damanguan)
+        .def_readwrite("hule_action", &Hule::hule_action)
+        .def_readwrite("option", &Hule::option)
+        .def_readwrite("hupai", &Hule::hupai)
+        .def_readwrite("has_hupai", &Hule::has_hupai);
+
     // Shoupai クラスのバインディング
     py::class_<Shoupai>(m, "Shoupai")
         .def(py::init<>())
