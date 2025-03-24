@@ -11,7 +11,7 @@ set(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 find_package(pybind11 CONFIG REQUIRED)
-pybind11_add_module(pymahjong src/bindings.cpp)
+pybind11_add_module(pymahjong SHARED src/bindings.cpp src/calsht_dw.cpp)
 
 target_include_directories(pymahjong PRIVATE src)
 
