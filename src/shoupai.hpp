@@ -9,8 +9,6 @@
 #include "action.hpp"
 #include "mianzi.hpp"
 
-inline CalshtDW cal_dw;
-
 struct Shoupai {
     std::array<int, 34> bing;
     std::vector<Mianzi> fulu;
