@@ -327,5 +327,3 @@ std::tuple<int, int, uint64_t, uint64_t> CalshtDW::operator()(const std::array<i
 
   return ret;
 }
-
-CalshtDW calsht_dw;

@@ -75,6 +75,9 @@ struct Shoupai {
         mode = m;
         tingpai = std::bitset<34>(w);
     }
+
+private:
+    CalshtDW calsht_dw;
 };
 
 #endif //PYMAHJONG_SHOUPAI_HPP

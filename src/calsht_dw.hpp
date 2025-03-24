@@ -44,6 +44,4 @@ public:
                                                       bool three_player = false) const;
 };
 
-extern CalshtDW calsht_dw;
-
 #endif
