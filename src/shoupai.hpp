@@ -71,7 +71,7 @@ struct Shoupai {
 
     void eval() {
         auto [x, m, d, w] = calsht_dw(bing, 4 - fulu.size(), 7);
-        xiangting = x - 1;
+        xiangting = x;
         mode = m;
         tingpai = std::bitset<34>(w);
     }
