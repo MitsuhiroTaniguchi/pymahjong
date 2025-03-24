@@ -25,16 +25,14 @@ PYBIND11_MODULE(pymahjong, m) {
     py::enum_<Mianzi::Type>(m, "MianziType")
         .value("shunzi", Mianzi::Type::shunzi)
         .value("kezi", Mianzi::Type::kezi)
-        .value("duizi", Mianzi::Type::duizi)
-        .export_values();
+        .value("duizi", Mianzi::Type::duizi);
 
     py::enum_<Mianzi::FuluType>(m, "FuluType")
         .value("none", Mianzi::FuluType::none)
         .value("chi", Mianzi::FuluType::chi)
         .value("peng", Mianzi::FuluType::peng)
         .value("minggang", Mianzi::FuluType::minggang)
-        .value("angang", Mianzi::FuluType::angang)
-        .export_values();
+        .value("angang", Mianzi::FuluType::angang);
 
     // Mianzi クラスのバインディング
     py::class_<Mianzi>(m, "Mianzi")
@@ -165,8 +163,7 @@ PYBIND11_MODULE(pymahjong, m) {
     	.value("jiagang", Action::jiagang)
     	.value("zimohu", Action::zimohu)
     	.value("ronghu", Action::ronghu)
-    	.value("pingju", Action::pingju)
-    	.export_values();
+    	.value("pingju", Action::pingju);
 
 	// Action クラスのバインディング
 	py::class_<Action>(m, "Action")
