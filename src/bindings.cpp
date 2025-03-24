@@ -5,7 +5,7 @@
 #include "calsht_dw.hpp"
 //#include "shoupai.hpp"
 #include "mianzi.hpp"
-////#include "hupai.hpp"
+#include "hupai.hpp"
 //#include "hule.hpp"
 //#include "action.hpp"
 
