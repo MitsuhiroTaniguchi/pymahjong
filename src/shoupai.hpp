@@ -70,14 +70,14 @@ struct Shoupai {
     }
 
     void eval() {
-        auto [x, m, d, w] = calsht_dw(bing, fulu.size() / 3, 7);
+        auto [x, m, d, w] = calsht_dw(bing, 4 - fulu.size(), 7);
         xiangting = x - 1;
         mode = m;
         tingpai = std::bitset<34>(w);
     }
 
 private:
-    CalshtDW calsht_dw = {};
+    CalshtDW calsht_dw;
 };
 
 #endif //PYMAHJONG_SHOUPAI_HPP

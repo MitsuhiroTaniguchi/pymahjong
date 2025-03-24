@@ -38,10 +38,10 @@ public:
       initialize();
   }
   std::tuple<int, int, uint64_t, uint64_t> operator()(const std::array<int, 34>& t,
-                                                      int m,
-                                                      int mode,
-                                                      bool check_hand = false,
-                                                      bool three_player = false) const;
+                                                      const int m,
+                                                      const int mode,
+                                                      const bool check_hand = false,
+                                                      const bool three_player = false) const;
 };
 
 #endif
