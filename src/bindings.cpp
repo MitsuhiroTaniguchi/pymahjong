@@ -7,7 +7,7 @@
 #include "mianzi.hpp"
 #include "hupai.hpp"
 //#include "hule.hpp"
-//#include "action.hpp"
+#include "action.hpp"
 
 namespace py = pybind11;
 
