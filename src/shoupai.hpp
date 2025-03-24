@@ -13,7 +13,7 @@ struct Shoupai {
     std::array<int, 34> bing;
     std::vector<Mianzi> fulu;
 
-    int xiangting = -1, mode = 0;
+    int xiangting, mode;
     std::bitset<34> tingpai;
 
     std::bitset<3> red;
