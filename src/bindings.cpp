@@ -4,7 +4,7 @@
 
 #include "calsht_dw.hpp"
 //#include "shoupai.hpp"
-//#include "mianzi.hpp"
+#include "mianzi.hpp"
 //#include "hupai.hpp"
 //#include "hule.hpp"
 //#include "action.hpp"
@@ -21,28 +21,28 @@ PYBIND11_MODULE(pymahjong, m) {
              py::arg("hand"), py::arg("size"), py::arg("mode"),
              py::arg("check_hand") = false, py::arg("three_player") = false);
 
-//    // Mianzi の enum バインディング
-//    py::enum_<Mianzi::Type>(m, "MianziType")
-//        .value("shunzi", Mianzi::Type::shunzi)
-//        .value("kezi", Mianzi::Type::kezi)
-//        .value("duizi", Mianzi::Type::duizi)
-//        .export_values();
-//
-//    py::enum_<Mianzi::FuluType>(m, "FuluType")
-//        .value("none", Mianzi::FuluType::none)
-//        .value("chi", Mianzi::FuluType::chi)
-//        .value("peng", Mianzi::FuluType::peng)
-//        .value("minggang", Mianzi::FuluType::minggang)
-//        .value("angang", Mianzi::FuluType::angang)
-//        .export_values();
-//
-//    // Mianzi クラスのバインディング
-//    py::class_<Mianzi>(m, "Mianzi")
-//        .def(py::init<Mianzi::Type, int>(), py::arg("type"), py::arg("pai_34"))
-//        .def(py::init<Mianzi::FuluType, int>(), py::arg("fulu_type"), py::arg("pai_34"))
-//        .def_readwrite("type", &Mianzi::type)
-//        .def_readwrite("fulu_type", &Mianzi::fulu_type)
-//        .def_readwrite("pai_34", &Mianzi::pai_34);
+    // Mianzi の enum バインディング
+    py::enum_<Mianzi::Type>(m, "MianziType")
+        .value("shunzi", Mianzi::Type::shunzi)
+        .value("kezi", Mianzi::Type::kezi)
+        .value("duizi", Mianzi::Type::duizi)
+        .export_values();
+
+    py::enum_<Mianzi::FuluType>(m, "FuluType")
+        .value("none", Mianzi::FuluType::none)
+        .value("chi", Mianzi::FuluType::chi)
+        .value("peng", Mianzi::FuluType::peng)
+        .value("minggang", Mianzi::FuluType::minggang)
+        .value("angang", Mianzi::FuluType::angang)
+        .export_values();
+
+    // Mianzi クラスのバインディング
+    py::class_<Mianzi>(m, "Mianzi")
+        .def(py::init<Mianzi::Type, int>(), py::arg("type"), py::arg("pai_34"))
+        .def(py::init<Mianzi::FuluType, int>(), py::arg("fulu_type"), py::arg("pai_34"))
+        .def_readwrite("type", &Mianzi::type)
+        .def_readwrite("fulu_type", &Mianzi::fulu_type)
+        .def_readwrite("pai_34", &Mianzi::pai_34);
 //
 //    // Hupai クラスのバインディング
 //    py::class_<Hupai>(m, "Hupai")
