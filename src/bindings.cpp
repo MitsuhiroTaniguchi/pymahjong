@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
-#include "calsht_dw.hpp"
+//#include "calsht_dw.hpp"
 //#include "shoupai.hpp"
 #include "mianzi.hpp"
 #include "hupai.hpp"
@@ -14,19 +14,19 @@ namespace py = pybind11;
 PYBIND11_MODULE(pymahjong, m) {
     m.doc() = "pymahjong: mahjong calculation library written in c++ with python bindings";
 
-    // Xiangting (CalshtDW) のバインディング
-    py::class_<CalshtDW>(m, "Xiangting")
-        .def(py::init<>())
-        .def("calculate", &CalshtDW::operator(),
-             py::arg("hand"), py::arg("size"), py::arg("mode"),
-             py::arg("check_hand") = false, py::arg("three_player") = false);
+//    // Xiangting (CalshtDW) のバインディング
+//    py::class_<CalshtDW>(m, "Xiangting")
+//        .def(py::init<>())
+//        .def("calculate", &CalshtDW::operator(),
+//             py::arg("hand"), py::arg("size"), py::arg("mode"),
+//             py::arg("check_hand") = false, py::arg("three_player") = false);
 
-//    // Mianzi の enum バインディング
-//    py::enum_<Mianzi::Type>(m, "MianziType")
-//        .value("shunzi", Mianzi::Type::shunzi)
-//        .value("kezi", Mianzi::Type::kezi)
-//        .value("duizi", Mianzi::Type::duizi)
-//        .export_values();
+    // Mianzi の enum バインディング
+    py::enum_<Mianzi::Type>(m, "MianziType")
+        .value("shunzi", Mianzi::Type::shunzi)
+        .value("kezi", Mianzi::Type::kezi)
+        .value("duizi", Mianzi::Type::duizi)
+        .export_values();
 //
 //    py::enum_<Mianzi::FuluType>(m, "FuluType")
 //        .value("none", Mianzi::FuluType::none)
