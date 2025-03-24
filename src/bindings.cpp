@@ -3,7 +3,7 @@
 #include <pybind11/numpy.h>
 
 #include "calsht_dw.hpp"
-//#include "shoupai.hpp"
+#include "shoupai.hpp"
 #include "mianzi.hpp"
 #include "hupai.hpp"
 //#include "hule.hpp"
@@ -128,31 +128,31 @@ PYBIND11_MODULE(pymahjong, m) {
 //        .def_readwrite("hupai", &Hule::hupai)
 //        .def_readwrite("has_hupai", &Hule::has_hupai);
 //
-//    // Shoupai クラスのバインディング
-//    py::class_<Shoupai>(m, "Shoupai")
-//        .def(py::init<>())
-//        .def(py::init<const std::array<int, 34>&>(), py::arg("bing"))
-//        .def(py::init<const std::array<int, 34>&, const std::vector<Mianzi>&>(),
-//             py::arg("bing"), py::arg("fulu"))
-//        .def_readwrite("bing", &Shoupai::bing)
-//        .def_readwrite("fulu", &Shoupai::fulu)
-//        .def_readwrite("xiangting", &Shoupai::xiangting)
-//        .def_readwrite("mode", &Shoupai::mode)
-//        .def_property_readonly("tingpai", [](const Shoupai &s) {
-//            std::vector<bool> v(s.tingpai.size());
-//            for (size_t i = 0; i < s.tingpai.size(); i++)
-//                v[i] = s.tingpai.test(i);
-//            return v;
-//        })
-//        .def_property_readonly("red", [](const Shoupai &s) {
-//            std::vector<bool> v(s.red.size());
-//            for (size_t i = 0; i < s.red.size(); i++)
-//                v[i] = s.red.test(i);
-//            return v;
-//        })
-//        .def("apply", &Shoupai::apply)
-//        .def("eval", &Shoupai::eval);
-//
+    // Shoupai クラスのバインディング
+    py::class_<Shoupai>(m, "Shoupai")
+        .def(py::init<>())
+        .def(py::init<const std::array<int, 34>&>(), py::arg("bing"))
+        .def(py::init<const std::array<int, 34>&, const std::vector<Mianzi>&>(),
+             py::arg("bing"), py::arg("fulu"))
+        .def_readwrite("bing", &Shoupai::bing)
+        .def_readwrite("fulu", &Shoupai::fulu)
+        .def_readwrite("xiangting", &Shoupai::xiangting)
+        .def_readwrite("mode", &Shoupai::mode)
+        .def_property_readonly("tingpai", [](const Shoupai &s) {
+            std::vector<bool> v(s.tingpai.size());
+            for (size_t i = 0; i < s.tingpai.size(); i++)
+                v[i] = s.tingpai.test(i);
+            return v;
+        })
+        .def_property_readonly("red", [](const Shoupai &s) {
+            std::vector<bool> v(s.red.size());
+            for (size_t i = 0; i < s.red.size(); i++)
+                v[i] = s.red.test(i);
+            return v;
+        })
+        .def("apply", &Shoupai::apply)
+        .def("eval", &Shoupai::eval);
+
     // Action の enum バインディング
     py::enum_<Action::Type>(m, "ActionType")
     	.value("zimo", Action::zimo)
