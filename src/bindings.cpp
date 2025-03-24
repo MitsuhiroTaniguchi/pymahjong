@@ -7,7 +7,7 @@
 #include "mianzi.hpp"
 #include "hupai.hpp"
 //#include "hule.hpp"
-//#include "action.hpp"
+#include "action.hpp"
 
 namespace py = pybind11;
 
@@ -153,28 +153,28 @@ PYBIND11_MODULE(pymahjong, m) {
 //        .def("apply", &Shoupai::apply)
 //        .def("eval", &Shoupai::eval);
 //
-//    // Action の enum バインディング
-//    py::enum_<Action::Type>(m, "ActionType")
-//    	.value("zimo", Action::zimo)
-//    	.value("dapai", Action::dapai)
-//    	.value("lizhi", Action::lizhi)
-//    	.value("chi", Action::chi)
-//    	.value("peng", Action::peng)
-//    	.value("minggang", Action::minggang)
-//    	.value("angang", Action::angang)
-//    	.value("jiagang", Action::jiagang)
-//    	.value("zimohu", Action::zimohu)
-//    	.value("ronghu", Action::ronghu)
-//    	.value("pingju", Action::pingju)
-//    	.export_values();
-//
-//	// Action クラスのバインディング
-//	py::class_<Action>(m, "Action")
-//    	.def(py::init<Action::Type, int>(), py::arg("type"), py::arg("pai_34"))
-//    	.def(py::init<Action::Type, int, bool>(), py::arg("type"), py::arg("pai_34"), py::arg("red"))
-//    	.def(py::init<Action::Type, int, bool, int>(), py::arg("type"), py::arg("pai_34"), py::arg("red"), py::arg("bias"))
-//    	.def_readwrite("type", &Action::type)
-//    	.def_readwrite("pai_34", &Action::pai_34)
-//    	.def_readwrite("red", &Action::red)
-//    	.def_readwrite("bias", &Action::bias);
+    // Action の enum バインディング
+    py::enum_<Action::Type>(m, "ActionType")
+    	.value("zimo", Action::zimo)
+    	.value("dapai", Action::dapai)
+    	.value("lizhi", Action::lizhi)
+    	.value("chi", Action::chi)
+    	.value("peng", Action::peng)
+    	.value("minggang", Action::minggang)
+    	.value("angang", Action::angang)
+    	.value("jiagang", Action::jiagang)
+    	.value("zimohu", Action::zimohu)
+    	.value("ronghu", Action::ronghu)
+    	.value("pingju", Action::pingju)
+    	.export_values();
+
+	// Action クラスのバインディング
+	py::class_<Action>(m, "Action")
+    	.def(py::init<Action::Type, int>(), py::arg("type"), py::arg("pai_34"))
+    	.def(py::init<Action::Type, int, bool>(), py::arg("type"), py::arg("pai_34"), py::arg("red"))
+    	.def(py::init<Action::Type, int, bool, int>(), py::arg("type"), py::arg("pai_34"), py::arg("red"), py::arg("bias"))
+    	.def_readwrite("type", &Action::type)
+    	.def_readwrite("pai_34", &Action::pai_34)
+    	.def_readwrite("red", &Action::red)
+    	.def_readwrite("bias", &Action::bias);
 }
