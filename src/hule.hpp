@@ -154,8 +154,8 @@ struct Hule {
                 if (not h.平和) fu += 2 * (qian || bian || danyi);
             }
 
-            fu += 10 * option.is_menqian;
-            fu += 2 * (hule_action.type == zimohu);
+            fu += 10 * (not zimohu && option.is_menqian);
+            fu += 2 * zimohu;
 
             fu = (fu + 9) / 10 * 10;
             if (fu == 20 && not option.is_menqian) fu = 30;
