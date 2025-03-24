@@ -27,7 +27,7 @@ struct Hule {
     std::vector<Mianzi> hand;
 
     Shoupai shoupai;
-    int fu, fanshu, damanguan;
+    int fu = 0, fanshu = 0, damanguan = 0;
 
     Action hule_action;
     HuleOption option;

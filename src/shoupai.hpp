@@ -77,7 +77,7 @@ struct Shoupai {
     }
 
 private:
-    CalshtDW calsht_dw;
+    CalshtDW calsht_dw = {};
 };
 
 #endif //PYMAHJONG_SHOUPAI_HPP
