@@ -49,7 +49,7 @@ PYBIND11_MODULE(pymahjong, m) {
     py::class_<Hupai>(m, "Hupai")
         .def(py::init<>())
         .def("sum", &Hupai::sum)
-        .def("__repr__", &Hupai::to_list)
+        .def("to_list", &Hupai::to_list)
         .def_readwrite("立直", &Hupai::立直)
         .def_readwrite("一発", &Hupai::一発)
         .def_readwrite("門前清自摸和", &Hupai::門前清自摸和)
@@ -145,7 +145,7 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("red", &Shoupai::red)
         .def("apply", &Shoupai::apply)
         .def("update", &Shoupai::update)
-        .def("__repr__", &Shoupai::to_list);
+        .def("__repr__", &Shoupai::to_string);
 
     // Action の enum バインディング
     py::enum_<Action::Type>(m, "ActionType")
