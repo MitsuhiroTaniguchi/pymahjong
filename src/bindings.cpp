@@ -140,18 +140,8 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("fulu", &Shoupai::fulu)
         .def_readwrite("xiangting", &Shoupai::xiangting)
         .def_readwrite("mode", &Shoupai::mode)
-        .def_property_readonly("tingpai", [](const Shoupai &s) {
-            std::vector<bool> v(s.tingpai.size());
-            for (size_t i = 0; i < s.tingpai.size(); i++)
-                v[i] = s.tingpai.test(i);
-            return v;
-        })
-        .def_property_readonly("red", [](const Shoupai &s) {
-            std::vector<bool> v(s.red.size());
-            for (size_t i = 0; i < s.red.size(); i++)
-                v[i] = s.red.test(i);
-            return v;
-        })
+        .def_readwrite("tingpai", &Shoupai::tingpai)
+        .def_readwrite("red", &Shoupai::red)
         .def("apply", &Shoupai::apply)
         .def("update", &Shoupai::update);
 

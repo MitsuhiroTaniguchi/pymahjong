@@ -37,21 +37,20 @@ struct Hule {
     std::vector<std::vector<Mianzi>> _possible_hands;
     int _argmax_possible_hands = -1;
 
-    void search_normal_form(int p, const bool head_unknown=true) {
+    void search_normal_form(int p, bool head_specified) {
         if (hand.size() == 5 - shoupai.fulu.size()) {
-            auto tail = std::back_inserter(_possible_hands.emplace_back());
-            std::copy(hand.begin(), hand.end(), tail);
-            std::copy(shoupai.fulu.begin(), shoupai.fulu.end(), tail);
+            auto& tail = _possible_hands.emplace_back(hand.begin(), hand.end());
+            tail.insert(tail.end(), shoupai.fulu.begin(), shoupai.fulu.end());
             return;
         }
         if (p >= 34) return;
-        if (not shoupai.bing[p]) return search_normal_form(p + 1);
+        if (not shoupai.bing[p]) return search_normal_form(p + 1, head_specified);
         if (p % 9 < 7 && p < 27 && shoupai.bing[p + 1] && shoupai.bing[p + 2]) {
             --shoupai.bing[p];
             --shoupai.bing[p + 1];
             --shoupai.bing[p + 2];
             hand.emplace_back(Mianzi::shunzi, p);
-            search_normal_form(p);
+            search_normal_form(p, head_specified);
             hand.pop_back();
             ++shoupai.bing[p];
             ++shoupai.bing[p + 1];
@@ -60,14 +59,14 @@ struct Hule {
         if (shoupai.bing[p] == 3) {
             shoupai.bing[p] -= 3;
             hand.emplace_back(Mianzi::kezi, p);
-            search_normal_form(p + 1);
+            search_normal_form(p + 1, head_specified);
             hand.pop_back();
             shoupai.bing[p] += 3;
         }
-        if (head_unknown && shoupai.bing[p] == 2) {
+        if (not head_specified && shoupai.bing[p] == 2) {
             shoupai.bing[p] -= 2;
             hand.emplace_back(Mianzi::duizi, p);
-            search_normal_form(p + 1, false);
+            search_normal_form(p + 1, true);
             hand.pop_back();
             shoupai.bing[p] += 2;
         }
@@ -77,7 +76,10 @@ struct Hule {
         for (int i = 0; i < 34; ++i) {
             if (shoupai.bing[i] == 2) hand.emplace_back(Mianzi::duizi, i);
         }
-        if (hand.size() == 7) std::copy(hand.begin(), hand.end(), std::back_inserter(_possible_hands.emplace_back()));
+        if (hand.size() == 7) {
+            _possible_hands.emplace_back(hand.begin(), hand.end());
+            return;
+        }
         hand.clear();
     }
 
@@ -263,7 +265,9 @@ struct Hule {
         if (shoupai.xiangting != -1) return;
         hule_pai = action.pai_34;
         is_zimohu = action.type == Action::zimohu;
-        if (shoupai.mode & 4) {
+        if (shoupai.mode & 0b001) search_normal_form(0, false);
+        if (shoupai.mode & 0b010) search_7duizi_form();
+        if (shoupai.mode & 0b100) {
             hupai.国士無双 = shoupai.bing[action.pai_34] == 1;
             hupai.国士無双１３面 = not hupai.国士無双;
             hupai.is_menqian = true;
@@ -272,8 +276,6 @@ struct Hule {
             has_hupai = true;
             return;
         }
-        search_normal_form(0);
-        if (shoupai.mode & 2) search_7duizi_form();
         if ((has_hupai = eval_possible_hands())) hand = _possible_hands[_argmax_possible_hands];
     }
 };
