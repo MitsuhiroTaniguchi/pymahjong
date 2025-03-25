@@ -116,7 +116,7 @@ PYBIND11_MODULE(pymahjong, m) {
 
     // Hule クラスのバインディング
     py::class_<Hule>(m, "Hule")
-        .def(py::init<const Shoupai&, const Action&, const HuleOption&>(),
+        .def(py::init<Shoupai&, const Action&, const HuleOption&>(),
              py::arg("shoupai"), py::arg("action"), py::arg("option"))
         .def_readwrite("hand", &Hule::hand)
         .def_readwrite("shoupai", &Hule::shoupai)
