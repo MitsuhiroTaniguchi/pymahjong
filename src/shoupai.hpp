@@ -9,18 +9,20 @@
 #include "action.hpp"
 #include "mianzi.hpp"
 
+inline CalshtDW calsht_dw;
+
 struct Shoupai {
     std::array<int, 34> bing;
     std::vector<Mianzi> fulu;
 
-    int xiangting, mode;
+    int xiangting = 13, mode = 0;
     std::bitset<34> tingpai;
 
     std::bitset<3> red;
 
-    Shoupai() : bing{} { eval(); }
-    explicit Shoupai(const std::array<int, 34>& bing) : bing{bing} { eval(); }
-    Shoupai(const std::array<int, 34>& bing, const std::vector<Mianzi>& fulu) : bing{bing}, fulu{fulu} { eval(); }
+    Shoupai() : bing{} {}
+    explicit Shoupai(const std::array<int, 34>& bing) : bing{bing} {}
+    Shoupai(const std::array<int, 34>& bing, const std::vector<Mianzi>& fulu) : bing{bing}, fulu{fulu} {}
 
     void apply(const Action& action) {
         int p = action.pai_34;
@@ -69,15 +71,12 @@ struct Shoupai {
         }
     }
 
-    void eval() {
+    void update() {
         auto [x, m, d, w] = calsht_dw(bing, 4 - fulu.size(), 7);
         xiangting = x;
         mode = m;
         tingpai = std::bitset<34>(w);
     }
-
-private:
-    CalshtDW calsht_dw;
 };
 
 #endif //PYMAHJONG_SHOUPAI_HPP

@@ -8,7 +8,7 @@ struct Mianzi {
 
     enum FuluType : uint8_t {
         none, chi, peng, minggang, angang
-    } fulu_type{};
+    } fulu_type = none;
 
     int pai_34;
 
