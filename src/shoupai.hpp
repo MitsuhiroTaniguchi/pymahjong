@@ -9,8 +9,6 @@
 #include "action.hpp"
 #include "mianzi.hpp"
 
-inline CalshtDW calsht_dw;
-
 struct Shoupai {
     std::array<int, 34> bing;
     std::vector<Mianzi> fulu;
@@ -72,10 +70,16 @@ struct Shoupai {
     }
 
     void update() {
-        auto [x, m, d, w] = calsht_dw(bing, 4 - fulu.size(), 7);
+        auto [x, m, d, w] = _x_cal()(bing, 4 - fulu.size(), 7);
         xiangting = x;
         mode = m;
         tingpai = std::bitset<34>(w);
+    }
+
+private:
+    static CalshtDW& _x_cal() {
+        static CalshtDW xiangting_calculator;
+        return xiangting_calculator;
     }
 };
 
