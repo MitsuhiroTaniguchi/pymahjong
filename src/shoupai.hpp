@@ -76,6 +76,22 @@ struct Shoupai {
         tingpai = std::bitset<34>(w);
     }
 
+    std::string to_string() const {
+        std::string s;
+        for (int i = 0; i < 4; ++i) {
+            s += "mpsz"[i];
+            for (int j = 0; j < (i < 3 ? 9 : 7); ++j) {
+                int p = i * 9 + j;
+                for (int k = 0; k < bing[p]; ++k) s += std::to_string(j);
+            }
+        }
+        for (auto& mianzi : fulu) {
+            s += ",";
+            s += mianzi.to_string();
+        }
+        return s;
+    }
+
 private:
     static CalshtDW& _x_cal() {
         static CalshtDW xiangting_calculator;

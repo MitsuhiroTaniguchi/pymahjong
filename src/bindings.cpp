@@ -40,6 +40,7 @@ PYBIND11_MODULE(pymahjong, m) {
     py::class_<Mianzi>(m, "Mianzi")
         .def(py::init<Mianzi::Type, int>(), py::arg("type"), py::arg("pai_34"))
         .def(py::init<Mianzi::FuluType, int>(), py::arg("fulu_type"), py::arg("pai_34"))
+        .def("__str__", &Mianzi::to_string)
         .def_readwrite("type", &Mianzi::type)
         .def_readwrite("fulu_type", &Mianzi::fulu_type)
         .def_readwrite("pai_34", &Mianzi::pai_34);
@@ -143,7 +144,8 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("tingpai", &Shoupai::tingpai)
         .def_readwrite("red", &Shoupai::red)
         .def("apply", &Shoupai::apply)
-        .def("update", &Shoupai::update);
+        .def("update", &Shoupai::update)
+        .def("__str__", &Shoupai::to_string);
 
     // Action の enum バインディング
     py::enum_<Action::Type>(m, "ActionType")
