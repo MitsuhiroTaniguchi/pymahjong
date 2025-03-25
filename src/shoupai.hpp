@@ -76,7 +76,8 @@ struct Shoupai {
         tingpai = std::bitset<34>(w);
     }
 
-    std::string to_string() const {
+    std::vector<std::string> to_list() const {
+        std::vector<std::string> ret;
         std::string s;
         for (int i = 0; i < 4; ++i) {
             s += "mpsz"[i];
@@ -85,11 +86,11 @@ struct Shoupai {
                 for (int k = 0; k < bing[p]; ++k) s += std::to_string(j);
             }
         }
+        ret.push_back(s);
         for (auto& mianzi : fulu) {
-            s += ",";
-            s += mianzi.to_string();
+            ret.push_back(mianzi.to_string());
         }
-        return s;
+        return ret;
     }
 
 private:

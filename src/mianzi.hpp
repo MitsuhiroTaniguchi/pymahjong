@@ -20,39 +20,36 @@ struct Mianzi {
         int n = pai_34 % 9 + 1;
         switch (type) {
         case shunzi:
-            s += fulu_type == none ? "shunzi(" : "chi(";
+            s += fulu_type == none ? "shunzi: " : "chi: ";
             s += "mpsz"[pai_34 / 9];
             s += std::to_string(n);
             s += std::to_string(n + 1);
             s += std::to_string(n + 2);
-            s += ")";
             break;
         case kezi:
             switch (fulu_type) {
         case none:
-            s += "kezi(";
+            s += "kezi: ";
                 break;
         case peng:
-            s += "peng(";
+            s += "peng: ";
                 break;
         case minggang:
-            s += "minggang(";
+            s += "minggang: ";
                 break;
         case angang:
-            s += "angang(";
+            s += "angang: ";
                 break;
         default:
             __builtin_unreachable();
             }
             s += "mpsz"[pai_34 / 9];
             s += std::to_string(n);
-            s += ")";
             break;
         case duizi:
-            s += "duizi(";
+            s += "duizi: ";
             s += "mpsz"[pai_34 / 9];
             s += std::to_string(n);
-            s += ")";
             break;
         }
         return s;

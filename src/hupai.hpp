@@ -178,7 +178,7 @@ struct Hupai {
 		return {fanshu, damanguan};
 	}
 
-	std::vector<std::pair<std::string, std::uint8_t>> tolist() {
+	std::vector<std::pair<std::string, std::uint8_t>> to_list() {
         _validate();
         std::vector<std::pair<std::string, uint8_t>> ret;
 

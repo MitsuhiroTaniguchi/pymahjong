@@ -40,7 +40,7 @@ PYBIND11_MODULE(pymahjong, m) {
     py::class_<Mianzi>(m, "Mianzi")
         .def(py::init<Mianzi::Type, int>(), py::arg("type"), py::arg("pai_34"))
         .def(py::init<Mianzi::FuluType, int>(), py::arg("fulu_type"), py::arg("pai_34"))
-        .def("__str__", &Mianzi::to_string)
+        .def("__repr__", &Mianzi::to_string)
         .def_readwrite("type", &Mianzi::type)
         .def_readwrite("fulu_type", &Mianzi::fulu_type)
         .def_readwrite("pai_34", &Mianzi::pai_34);
@@ -49,7 +49,7 @@ PYBIND11_MODULE(pymahjong, m) {
     py::class_<Hupai>(m, "Hupai")
         .def(py::init<>())
         .def("sum", &Hupai::sum)
-        .def("tolist", &Hupai::tolist)
+        .def("__repr__", &Hupai::to_list)
         .def_readwrite("立直", &Hupai::立直)
         .def_readwrite("一発", &Hupai::一発)
         .def_readwrite("門前清自摸和", &Hupai::門前清自摸和)
@@ -145,7 +145,7 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("red", &Shoupai::red)
         .def("apply", &Shoupai::apply)
         .def("update", &Shoupai::update)
-        .def("__str__", &Shoupai::to_string);
+        .def("__repr__", &Shoupai::to_list);
 
     // Action の enum バインディング
     py::enum_<Action::Type>(m, "ActionType")
