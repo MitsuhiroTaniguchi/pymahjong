@@ -49,7 +49,7 @@ PYBIND11_MODULE(pymahjong, m) {
     py::class_<Hupai>(m, "Hupai")
         .def(py::init<>())
         .def("sum", &Hupai::sum)
-        .def("to_list", &Hupai::to_list)
+        .def("tolist", &Hupai::tolist)
         .def_readwrite("立直", &Hupai::立直)
         .def_readwrite("一発", &Hupai::一発)
         .def_readwrite("門前清自摸和", &Hupai::門前清自摸和)
