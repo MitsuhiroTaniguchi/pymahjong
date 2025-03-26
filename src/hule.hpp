@@ -247,7 +247,7 @@ struct Hule {
                         shoupai.bing[i + 7] &&
                         shoupai.bing[i + 8] >= 3;
                 }
-                h.純正九蓮宝燈 = h.九蓮宝燈 && danyi;
+                h.純正九蓮宝燈 = h.九蓮宝燈 && (shoupai.bing[hule_pai] & 1) == 0;
             }
 
             auto [fanshu, damanguan] = h.sum();
@@ -273,7 +273,7 @@ struct Hule {
         if (shoupai.mode & 0b001) search_normal_form(0, false);
         if (shoupai.mode & 0b010) search_7duizi_form();
         if (shoupai.mode & 0b100) {
-            hupai.国士無双 = shoupai.bing[action.pai_34] == 1;
+            hupai.国士無双 = shoupai.bing[hule_pai] == 1;
             hupai.国士無双１３面 = not hupai.国士無双;
             hupai.is_menqian = true;
             fu = action.type == Action::zimohu ? 30 : 40;
