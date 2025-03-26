@@ -97,8 +97,9 @@ struct Hule {
             for (auto& mianzi : hand) {
                 int p = mianzi.pai_34;
                 color |= 1 << p / 9;
-                if (mianzi.type == Mianzi::shunzi) {
-                    if (shunzi >> p & 1) yibeikou |= 1 << p;
+                switch (mianzi.type) {
+                case Mianzi::shunzi:
+                    yibeikou |= 1 << p & shunzi;
                     shunzi |= 1 << p;
                     if (mianzi.fulu_type == Mianzi::FuluType::none) {
                         switch (hule_pai - p) {
@@ -114,37 +115,39 @@ struct Hule {
                         default:;
                         }
                     }
-                } else {
-                    bool is_z = p >= 27;
-                    bool is_19z = p % 9 == 0 || p % 9 == 8 || is_z;
-                    if (mianzi.type == Mianzi::kezi) {
-                        kezi |= 1uLL << p;
-                        switch (mianzi.fulu_type) {
-                        case Mianzi::peng:
-                            fu += 2 << is_19z;
-                            break;
-                        case Mianzi::FuluType::none:
-                            fu += 4 << is_19z;
-                            ++ankezi;
-                            break;
-                        case Mianzi::minggang:
-                            fu += 8 << is_19z;
-                            ++gangzi;
-                            break;
-                        case Mianzi::angang:
-                            fu += 16 << is_19z;
-                            ++ankezi;
-                            ++gangzi;
-                            break;
-                        default: __builtin_unreachable();
-                        }
-                    } else {
-                        duizi |= 1uLL << p;
-                        head = p;
-                        fu += 2 * (p - 27 == option.zhuangfeng);
-                        fu += 2 * (p - 27 == option.lunban);
-                        fu += 2 * (p > 30);
+                    break;
+                case Mianzi::kezi: {
+                    kezi |= 1uLL << p;
+                    bool is_19z = p >= 27 || p % 9 == 0 || p % 9 == 8;
+                    switch (mianzi.fulu_type) {
+                    case Mianzi::peng:
+                        fu += 2 << is_19z;
+                        break;
+                    case Mianzi::FuluType::none:
+                        fu += 4 << is_19z;
+                        ++ankezi;
+                        break;
+                    case Mianzi::minggang:
+                        fu += 8 << is_19z;
+                        ++gangzi;
+                        break;
+                    case Mianzi::angang:
+                        fu += 16 << is_19z;
+                        ++ankezi;
+                        ++gangzi;
+                        break;
+                    default:
+                        __builtin_unreachable();
                     }
+                    break;
+                }
+                case Mianzi::duizi:
+                    duizi |= 1uLL << p;
+                    head = p;
+                    fu += 2 * (p - 27 == option.zhuangfeng);
+                    fu += 2 * (p - 27 == option.lunban);
+                    fu += 2 * (p > 30);
+                    break;
                 }
             }
 
@@ -161,8 +164,6 @@ struct Hule {
                 }
             }
 
-            h.対々和 = shunzi == 0 && not h.七対子;
-
             if (option.is_init_turn_and_no_call && is_zimohu) {
                 h.天和 = option.lunban == 0;
                 h.地和 = option.lunban != 0;
@@ -172,33 +173,11 @@ struct Hule {
             h.一発 = option.is_yifa;
             h.門前清自摸和 = is_zimohu && option.is_menqian;
 
-            h.場風_東 = option.zhuangfeng == 0 && kezi >> 27 & 1;
-            h.場風_南 = option.zhuangfeng == 1 && kezi >> 28 & 1;
-            h.場風_西 = option.zhuangfeng == 2 && kezi >> 29 & 1;
-            h.場風_北 = option.zhuangfeng == 3 && kezi >> 30 & 1;
-
-            h.自風_東 = option.lunban == 0 && kezi >> 27 & 1;
-            h.自風_南 = option.lunban == 1 && kezi >> 28 & 1;
-            h.自風_西 = option.lunban == 2 && kezi >> 29 & 1;
-            h.自風_北 = option.lunban == 3 && kezi >> 30 & 1;
-
-            h.役牌_白 = kezi >> 31 & 1;
-            h.役牌_發 = kezi >> 32 & 1;
-            h.役牌_中 = kezi >> 33 & 1;
-
             h.槍槓 = option.is_qianggang;
             h.嶺上開花 = option.is_lingshang;
 
             h.海底摸月 = option.is_haidi && is_zimohu;
             h.河底撈魚 = option.is_haidi && not is_zimohu;
-
-            h.一盃口 = option.is_menqian && yibeikou != 0;
-            h.二盃口 = h.一盃口 && __builtin_popcount(yibeikou) == 2;
-
-            h.一気通貫 = (shunzi & 0b1001001) == 0b1001001 || (shunzi >> 9 & 0b1001001) == 0b1001001 || (shunzi >> 18 & 0b1001001) == 0b1001001;
-
-            h.三色同順 = (shunzi & 0x1ff & (shunzi >> 9 & 0x1ff) & (shunzi >> 18 & 0x1ff)) != 0;
-            h.三色同刻 = (kezi & 0x1ff & (kezi >> 9 & 0x1ff) & (kezi >> 18 & 0x1ff)) != 0;
 
             h.混一色 = color == 0b1001 || color == 0b1010 || color == 0b1100;
             h.清一色 = color == 0b0001 || color == 0b0010 || color == 0b0100;
@@ -206,43 +185,70 @@ struct Hule {
 
             uint64_t kd = kezi | duizi;
 
-            h.緑一色 = color == 0b1100 && (shunzi >> 18 & 0b111111101) == 0 && (kd >> 18 & 0b1011111101010001) == 0;
-
             h.断么九 = color < 0b1000 && (shunzi & 0b001000001001000001001000001 | kd & 0b100000001100000001100000001) == 0;
 
             h.混全帯么九 = (shunzi & 0b110111110110111110110111110 | kd & 0b011111110011111110011111110) == 0;
             h.純全帯么九 = h.混全帯么九 && color < 0b1000;
 
-            h.混老頭 = (h.対々和 || h.七対子) && h.混全帯么九;
-            h.清老頭 = h.混老頭 && h.純全帯么九;
+            h.混老頭 = h.混全帯么九 && shunzi == 0;
+            h.清老頭 = h.純全帯么九 && shunzi == 0;
 
-            h.小四喜 = ((kezi | 1uLL << head) >> 27 & 0b1111) == 0b1111;
-            h.大四喜 = (kezi >> 27 & 0b1111) == 0b1111;
+            h.緑一色 = color == 0b1100 && (shunzi >> 18 & 0b111111101) == 0 && (kd >> 18 & 0b1011111101010001) == 0;
 
-            h.小三元 = ((kezi | 1uLL << head) >> 31 & 0b111) == 0b111;
-            h.大三元 = (kezi >> 31 & 0b111) == 0b111;
+            if (not h.七対子) {
+                h.場風_東 = option.zhuangfeng == 0 && kezi >> 27 & 1;
+                h.場風_南 = option.zhuangfeng == 1 && kezi >> 28 & 1;
+                h.場風_西 = option.zhuangfeng == 2 && kezi >> 29 & 1;
+                h.場風_北 = option.zhuangfeng == 3 && kezi >> 30 & 1;
 
-            h.三暗刻 = ankezi == 4 || ankezi == 3 && (is_zimohu || liangmian || qian || bian || danyi);
-            h.四暗刻 = ankezi == 4 && is_zimohu;
-            h.四暗刻単騎 = ankezi == 4 && danyi;
+                h.自風_東 = option.lunban == 0 && kezi >> 27 & 1;
+                h.自風_南 = option.lunban == 1 && kezi >> 28 & 1;
+                h.自風_西 = option.lunban == 2 && kezi >> 29 & 1;
+                h.自風_北 = option.lunban == 3 && kezi >> 30 & 1;
 
-            h.三槓子 = gangzi == 3;
-            h.四槓子 = gangzi == 4;
+                h.役牌_白 = kezi >> 31 & 1;
+                h.役牌_發 = kezi >> 32 & 1;
+                h.役牌_中 = kezi >> 33 & 1;
 
-            if (h.清一色 && shoupai.fulu.empty()) {
-                int i = __builtin_ctz(color) * 9;
-                h.九蓮宝燈 =
-                    shoupai.bing[i] >= 3 &&
-                    shoupai.bing[i + 1] &&
-                    shoupai.bing[i + 2] &&
-                    shoupai.bing[i + 3] &&
-                    shoupai.bing[i + 4] &&
-                    shoupai.bing[i + 5] &&
-                    shoupai.bing[i + 6] &&
-                    shoupai.bing[i + 7] &&
-                    shoupai.bing[i + 8] >= 3;
+                h.対々和 = shunzi == 0;
+
+                h.一盃口 = yibeikou && option.is_menqian;
+                h.二盃口 = h.一盃口 && __builtin_popcount(yibeikou) == 2;
+
+                h.一気通貫 = (shunzi & 0b1001001) == 0b1001001 || (shunzi >> 9 & 0b1001001) == 0b1001001 || (shunzi >> 18 & 0b1001001) == 0b1001001;
+
+                h.三色同順 = (shunzi & 0x1ff & (shunzi >> 9 & 0x1ff) & (shunzi >> 18 & 0x1ff)) != 0;
+                h.三色同刻 = (kezi & 0x1ff & (kezi >> 9 & 0x1ff) & (kezi >> 18 & 0x1ff)) != 0;
+
+                h.小四喜 = ((kezi | 1uLL << head) >> 27 & 0b1111) == 0b1111;
+                h.大四喜 = (kezi >> 27 & 0b1111) == 0b1111;
+
+                h.小三元 = ((kezi | 1uLL << head) >> 31 & 0b111) == 0b111;
+                h.大三元 = (kezi >> 31 & 0b111) == 0b111;
+
+                h.三暗刻 = ankezi == 4 || ankezi == 3 && (is_zimohu || liangmian || qian || bian || danyi);
+
+                h.四暗刻 = ankezi == 4 && is_zimohu;
+                h.四暗刻単騎 = ankezi == 4 && danyi;
+
+                h.三槓子 = gangzi == 3;
+                h.四槓子 = gangzi == 4;
+
+                if (h.清一色 && shoupai.fulu.empty()) {
+                    int i = __builtin_ctz(color) * 9;
+                    h.九蓮宝燈 =
+                        shoupai.bing[i] >= 3 &&
+                        shoupai.bing[i + 1] &&
+                        shoupai.bing[i + 2] &&
+                        shoupai.bing[i + 3] &&
+                        shoupai.bing[i + 4] &&
+                        shoupai.bing[i + 5] &&
+                        shoupai.bing[i + 6] &&
+                        shoupai.bing[i + 7] &&
+                        shoupai.bing[i + 8] >= 3;
+                }
+                h.純正九蓮宝燈 = h.九蓮宝燈 && danyi;
             }
-            h.純正九蓮宝燈 = h.九蓮宝燈 && danyi;
 
             auto [fanshu, damanguan] = h.sum();
             uint64_t rank = damanguan << 32 | fanshu << 16 | fu;
