@@ -109,7 +109,7 @@ struct Hule {
                             qian = true;
                             break;
                         case 2:
-                            (p % 9 > 2 ? liangmian : bian) = true;
+                            (p % 9 > 0 ? liangmian : bian) = true;
                             break;
                         default:;
                         }
