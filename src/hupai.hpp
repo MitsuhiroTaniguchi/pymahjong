@@ -178,9 +178,9 @@ struct Hupai {
 		return {fanshu, damanguan};
 	}
 
-	std::vector<std::pair<std::string, std::uint8_t>> to_list() {
+	std::vector<std::pair<std::string, int>> to_list() {
         _validate();
-        std::vector<std::pair<std::string, uint8_t>> ret;
+        std::vector<std::pair<std::string, int>> ret;
 
         if (立直) ret.emplace_back("立直", 立直);
         if (一発) ret.emplace_back("一発", 一発);

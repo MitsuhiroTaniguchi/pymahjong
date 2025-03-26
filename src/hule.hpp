@@ -246,7 +246,7 @@ struct Hule {
             h.純正九蓮宝燈 = h.九蓮宝燈 && danyi;
 
             auto [fanshu, damanguan] = h.sum();
-            uint64_t rank = damanguan << 32 | fanshu << 16 || fu;
+            uint64_t rank = damanguan << 32 | fanshu << 16 | fu;
             if (rank > max_rank) {
                 max_rank = rank;
                 this->fu = fu;
