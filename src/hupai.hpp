@@ -178,7 +178,7 @@ struct Hupai {
 		return {fanshu, damanguan};
 	}
 
-	std::vector<std::pair<std::string, int>> to_list() {
+	std::vector<std::pair<std::string, int>> tolist() {
         _validate();
         std::vector<std::pair<std::string, int>> ret;
 
@@ -206,14 +206,14 @@ struct Hupai {
 		if (両立直) ret.emplace_back("両立直", 2 * 両立直);
 		if (七対子) ret.emplace_back("七対子", 2 * 七対子);
         if (三色同刻) ret.emplace_back("三色同刻", 2 * 三色同刻);
-		if (三槓子) ret.emplace_back("三槓子", 2 * 三槓子);
 		if (対々和) ret.emplace_back("対々和", 2 * 対々和);
 		if (三暗刻) ret.emplace_back("三暗刻", 2 * 三暗刻);
+		if (三槓子) ret.emplace_back("三槓子", 2 * 三槓子);
         if (小三元) ret.emplace_back("小三元", 2 * 小三元);
 		if (混老頭) ret.emplace_back("混老頭", 2 * 混老頭);
-		if (混全帯么九) ret.emplace_back("混全帯么九", (1 + is_menqian) * 混全帯么九);
 		if (一気通貫) ret.emplace_back("一気通貫", (1 + is_menqian) * 一気通貫);
 		if (三色同順) ret.emplace_back("三色同順", (1 + is_menqian) * 三色同順);
+		if (混全帯么九) ret.emplace_back("混全帯么九", (1 + is_menqian) * 混全帯么九);
 		if (純全帯么九) ret.emplace_back("純全帯么九", (2 + is_menqian) * 純全帯么九);
 		if (二盃口) ret.emplace_back("二盃口", (2 + is_menqian) * 二盃口);
         if (混一色) ret.emplace_back("混一色", (2 + is_menqian) * 混一色);
@@ -221,18 +221,18 @@ struct Hupai {
 
 		if (天和) ret.emplace_back("天和",  天和);
         if (地和) ret.emplace_back("地和",  地和);
-        if (大三元) ret.emplace_back("大三元",  大三元);
-		if (四暗刻) ret.emplace_back("四暗刻", 四暗刻);
-		if (四暗刻単騎) ret.emplace_back("四暗刻単騎", 2 * 四暗刻単騎);
-		if (字一色) ret.emplace_back("字一色", 字一色);
-        if (緑一色) ret.emplace_back("緑一色", 緑一色);
-		if (清老頭) ret.emplace_back("清老頭", 清老頭);
 		if (国士無双) ret.emplace_back("国士無双", 国士無双);
-		if (国士無双１３面) ret.emplace_back("国士無双１３面", 2 * 国士無双１３面);
+		if (九蓮宝燈) ret.emplace_back("九蓮宝燈", 九蓮宝燈);
+		if (緑一色) ret.emplace_back("緑一色", 緑一色);
+		if (大三元) ret.emplace_back("大三元",  大三元);
+		if (字一色) ret.emplace_back("字一色", 字一色);
+		if (四暗刻) ret.emplace_back("四暗刻", 四暗刻);
+		if (四槓子) ret.emplace_back("四槓子", 四槓子);
+		if (清老頭) ret.emplace_back("清老頭", 清老頭);
 		if (小四喜) ret.emplace_back("小四喜", 小四喜);
         if (大四喜) ret.emplace_back("大四喜", 2 * 大四喜);
-        if (四槓子) ret.emplace_back("四槓子", 四槓子);
-		if (九蓮宝燈) ret.emplace_back("九蓮宝燈", 九蓮宝燈);
+		if (四暗刻単騎) ret.emplace_back("四暗刻単騎", 2 * 四暗刻単騎);
+		if (国士無双１３面) ret.emplace_back("国士無双１３面", 2 * 国士無双１３面);
 		if (純正九蓮宝燈) ret.emplace_back("純正九蓮宝燈", 2 * 純正九蓮宝燈);
 
         return ret;
