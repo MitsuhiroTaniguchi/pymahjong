@@ -153,14 +153,13 @@ struct Hule {
             if ((h.七対子 = __builtin_popcount(duizi) == 7)) fu = 25;
             else {
                 h.平和 = fu == 20 && shoupai.fulu.empty() && liangmian;
-                if (not h.平和) fu += 2 * (qian || bian || danyi);
+                fu += 10 * (not is_zimohu && option.is_menqian);
+                if (not h.平和) {
+                    fu += 2 * (qian || bian || danyi);
+                    fu += 2 * is_zimohu;
+                    fu = (fu + 9) / 10 * 10;
+                }
             }
-
-            fu += 10 * (not is_zimohu && option.is_menqian);
-            fu += 2 * is_zimohu;
-
-            fu = (fu + 9) / 10 * 10;
-            if (fu == 20 && not option.is_menqian) fu = 30;
 
             h.対々和 = shunzi == 0 && not h.七対子;
 
