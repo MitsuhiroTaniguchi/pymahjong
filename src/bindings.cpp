@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <cstdint>
 
 #include "calsht_dw.hpp"
 #include "shoupai.hpp"
@@ -10,6 +11,18 @@
 #include "action.hpp"
 
 namespace py = pybind11;
+
+namespace {
+uint64_t bitset34_to_mask(const std::bitset<34>& bits) {
+    uint64_t mask = 0;
+    for (int i = 0; i < 34; ++i) {
+        if (bits.test(i)) {
+            mask |= (uint64_t(1) << i);
+        }
+    }
+    return mask;
+}
+}  // namespace
 
 PYBIND11_MODULE(pymahjong, m) {
     m.doc() = "pymahjong: mahjong calculation library written in c++ with python bindings";
@@ -145,7 +158,85 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("red", &Shoupai::red)
         .def("apply", &Shoupai::apply)
         .def("update", &Shoupai::update)
+        .def("tingpai_mask", [](const Shoupai& shoupai) {
+            return bitset34_to_mask(shoupai.tingpai);
+        })
+        .def("tingpai_list", [](const Shoupai& shoupai) {
+            std::vector<int> out;
+            out.reserve(34);
+            for (int i = 0; i < 34; ++i) {
+                if (shoupai.tingpai.test(i)) out.push_back(i);
+            }
+            return out;
+        })
         .def("__repr__", &Shoupai::to_string);
+
+    m.def("wait_mask", [](const std::array<int, 34>& hand, int meld_count) {
+        static CalshtDW xiangting_calculator;
+        auto [x, _mode, _disc, wait] = xiangting_calculator(hand, 4 - meld_count, 7, false, false);
+        if (x != 0) return uint64_t(0);
+        return static_cast<uint64_t>(wait);
+    }, py::arg("hand"), py::arg("meld_count"));
+
+    m.def("has_riichi_discard", [](const std::array<int, 34>& hand, int meld_count) {
+        static CalshtDW xiangting_calculator;
+        auto base = hand;
+        for (int i = 0; i < 34; ++i) {
+            if (base[i] == 0) continue;
+            --base[i];
+            auto [x, _mode, _disc, _wait] = xiangting_calculator(base, 4 - meld_count, 7, false, false);
+            ++base[i];
+            if (x == 0) return true;
+        }
+        return false;
+    }, py::arg("hand"), py::arg("meld_count"));
+
+    m.def("has_hupai",
+          [](const std::array<int, 34>& hand,
+             const std::vector<std::pair<int, int>>& melds,
+             int win_tile,
+             bool is_tsumo,
+             bool is_menqian,
+             bool is_riichi,
+             int zhuangfeng,
+             int lunban) {
+              std::vector<Mianzi> fulu;
+              fulu.reserve(melds.size());
+              for (const auto& [meld_type, pai_34] : melds) {
+                  switch (meld_type) {
+                  case 0:
+                      fulu.emplace_back(Mianzi::chi, pai_34);
+                      break;
+                  case 1:
+                      fulu.emplace_back(Mianzi::peng, pai_34);
+                      break;
+                  case 2:
+                      fulu.emplace_back(Mianzi::minggang, pai_34);
+                      break;
+                  case 3:
+                      fulu.emplace_back(Mianzi::angang, pai_34);
+                      break;
+                  default:
+                      throw std::runtime_error("invalid meld type for has_hupai");
+                  }
+              }
+
+              Shoupai shoupai = fulu.empty() ? Shoupai(hand) : Shoupai(hand, fulu);
+              HuleOption option(zhuangfeng, lunban);
+              option.is_menqian = is_menqian;
+              option.is_lizhi = is_riichi;
+              Action action(is_tsumo ? Action::zimohu : Action::ronghu, win_tile);
+              Hule hule(shoupai, action, option);
+              return hule.has_hupai;
+          },
+          py::arg("hand"),
+          py::arg("melds"),
+          py::arg("win_tile"),
+          py::arg("is_tsumo"),
+          py::arg("is_menqian"),
+          py::arg("is_riichi"),
+          py::arg("zhuangfeng"),
+          py::arg("lunban"));
 
     // Action の enum バインディング
     py::enum_<Action::Type>(m, "ActionType")
