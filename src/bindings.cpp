@@ -154,8 +154,14 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("fulu", &Shoupai::fulu)
         .def_readwrite("xiangting", &Shoupai::xiangting)
         .def_readwrite("mode", &Shoupai::mode)
-        .def_readwrite("tingpai", &Shoupai::tingpai)
-        .def_readwrite("red", &Shoupai::red)
+        .def_property(
+            "tingpai",
+            [](const Shoupai& s) { return static_cast<std::uint64_t>(s.tingpai.to_ullong()); },
+            [](Shoupai& s, std::uint64_t v) { s.tingpai = std::bitset<34>(v); })
+        .def_property(
+            "red",
+            [](const Shoupai& s) { return static_cast<std::uint8_t>(s.red.to_ulong()); },
+            [](Shoupai& s, std::uint8_t v) { s.red = std::bitset<3>(v); })
         .def("apply", &Shoupai::apply)
         .def("update", &Shoupai::update)
         .def("tingpai_mask", [](const Shoupai& shoupai) {
