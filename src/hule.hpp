@@ -4,6 +4,7 @@
 #include "mianzi.hpp"
 #include "shoupai.hpp"
 #include <algorithm>
+#include <array>
 #include <vector>
 
 #include "action.hpp"
@@ -27,10 +28,11 @@ struct Hule {
     std::vector<Mianzi> hand;
 
     Shoupai shoupai;
-    bool has_hupai;
+    bool has_hupai = false;
     int fu = 0, fanshu = 0, damanguan = 0;
 
-    int hule_pai; bool is_zimohu;
+    int hule_pai = -1;
+    bool is_zimohu = false;
     HuleOption option;
     Hupai hupai;
 
@@ -90,8 +92,9 @@ struct Hule {
             Hupai h = {}; h.is_menqian = option.is_menqian;
             int fu = 20;
             int ankezi = 0, gangzi = 0, head;
+            int ron_kezi_fu_correction = 0;
             uint64_t shunzi = 0, kezi = 0, duizi = 0;
-            uint64_t yibeikou = 0;
+            std::array<int, 34> shunzi_count{};
             bool liangmian = false, qian = false, bian = false;
             uint8_t color = 0;
             for (auto& mianzi : hand) {
@@ -99,7 +102,7 @@ struct Hule {
                 color |= 1 << p / 9;
                 switch (mianzi.type) {
                 case Mianzi::shunzi:
-                    yibeikou |= 1 << p & shunzi;
+                    ++shunzi_count[p];
                     shunzi |= 1 << p;
                     if (mianzi.fulu_type == Mianzi::FuluType::none) {
                         switch (hule_pai - p) {
@@ -126,6 +129,7 @@ struct Hule {
                     case Mianzi::FuluType::none:
                         fu += 4 << is_19z;
                         ++ankezi;
+                        if (not is_zimohu && p == hule_pai) ron_kezi_fu_correction = 2 << is_19z;
                         break;
                     case Mianzi::minggang:
                         fu += 8 << is_19z;
@@ -152,8 +156,10 @@ struct Hule {
             }
 
             bool danyi = head == hule_pai;
+            bool shanpon_ron = not is_zimohu && not liangmian && not qian && not bian && not danyi;
+            if (shanpon_ron && ron_kezi_fu_correction) fu -= ron_kezi_fu_correction;
 
-            if ((h.七対子 = __builtin_popcount(duizi) == 7)) fu = 25;
+            if ((h.七対子 = __builtin_popcountll(duizi) == 7)) fu = 25;
             else {
                 h.平和 = fu == 20 && shoupai.fulu.empty() && liangmian;
                 fu += 10 * (not is_zimohu && option.is_menqian);
@@ -193,7 +199,9 @@ struct Hule {
             h.混老頭 = h.混全帯么九 && shunzi == 0;
             h.清老頭 = h.純全帯么九 && shunzi == 0;
 
-            h.緑一色 = color == 0b1100 && (shunzi >> 18 & 0b111111101) == 0 && (kd >> 18 & 0b1011111101010001) == 0;
+            h.緑一色 = (color == 0b0100 || color == 0b1100) &&
+                    (shunzi >> 18 & 0b111111101) == 0 &&
+                    (kd >> 18 & 0b1011111101010001) == 0;
 
             if (not h.七対子) {
                 h.場風_東 = option.zhuangfeng == 0 && kezi >> 27 & 1;
@@ -212,8 +220,10 @@ struct Hule {
 
                 h.対々和 = shunzi == 0;
 
-                h.一盃口 = yibeikou && option.is_menqian;
-                h.二盃口 = h.一盃口 && __builtin_popcount(yibeikou) == 2;
+                int yibeikou_pair_count = 0;
+                for (int p = 0; p < 25; ++p) yibeikou_pair_count += shunzi_count[p] / 2;
+                h.一盃口 = option.is_menqian && yibeikou_pair_count >= 1;
+                h.二盃口 = option.is_menqian && yibeikou_pair_count >= 2;
 
                 h.一気通貫 = (shunzi & 0b1001001) == 0b1001001 || (shunzi >> 9 & 0b1001001) == 0b1001001 || (shunzi >> 18 & 0b1001001) == 0b1001001;
 
@@ -251,6 +261,7 @@ struct Hule {
             }
 
             auto [fanshu, damanguan] = h.sum();
+            if (fanshu == 0 && damanguan == 0) continue;
             uint64_t rank = damanguan << 32 | fanshu << 16 | fu;
             if (rank > max_rank) {
                 max_rank = rank;

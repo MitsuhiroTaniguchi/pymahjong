@@ -3,6 +3,7 @@
 #include <array>
 #include <cassert>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <random>
 #include <utility>
@@ -27,8 +28,8 @@ int main(int argc, char* argv[])
   constexpr int MODE = 7;
   const int NUM_ROUNDS = std::atoi(argv[1]);
   const bool THREE_PLAYER = std::atoi(argv[2]);
-  std::vector<int> hand(NUM_TIDS, 0);
-  std::vector<int> wall34(NUM_TIDS, 0);
+  std::array<int, NUM_TIDS> hand{};
+  std::array<int, NUM_TIDS> wall34{};
   std::vector<int> wall136;
   std::array<int, NUM_TIDS> cnt{};
   std::array<std::array<int, MAX_SHT>, NUM_TURNS> table{};
@@ -38,7 +39,6 @@ int main(int argc, char* argv[])
   std::mt19937_64 rand(seed_gen());
   CalshtDW calsht;
 
-  calsht.initialize();
   wall136.reserve(NUM_TIDS * 4);
 
   for (int i = 0; i < NUM_TIDS; ++i) {
@@ -56,12 +56,12 @@ int main(int argc, char* argv[])
 
     for (int j = 0; j < NUM_TILES; ++j) {
       ++hand[wall136[j]];
-      --wall34[j];
+      --wall34[wall136[j]];
     }
 
     for (int j = 0; j < NUM_TURNS; ++j) {
       ++hand[wall136[j + NUM_TILES]];
-      --wall34[j + NUM_TILES];
+      --wall34[wall136[j + NUM_TILES]];
 
       const auto [sht, mode, disc, wait] = calsht(hand,
                                                   NUM_TILES / 3,
@@ -123,10 +123,10 @@ int main(int argc, char* argv[])
       std::cout << table[i][j] << "\t";
     }
 
-    std::cout << std::format("{:.6f}\t{:.6f}\t{:.6f}\n",
-                             1. * table[i][0] / NUM_ROUNDS,
-                             1. * (table[i][0] + table[i][1]) / NUM_ROUNDS,
-                             ev / NUM_ROUNDS);
+    std::cout << std::fixed << std::setprecision(6)
+              << 1. * table[i][0] / NUM_ROUNDS << "\t"
+              << 1. * (table[i][0] + table[i][1]) / NUM_ROUNDS << "\t"
+              << ev / NUM_ROUNDS << "\n";
   }
 
   return 0;

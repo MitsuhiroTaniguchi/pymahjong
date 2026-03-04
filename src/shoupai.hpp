@@ -61,6 +61,7 @@ struct Shoupai {
         case Action::jiagang:
             for (auto& mianzi : fulu) {
                 if (mianzi.fulu_type == Mianzi::peng && mianzi.pai_34 == p) {
+                    --bing[p];
                     mianzi.fulu_type = Mianzi::minggang;
                     return;
                 }
@@ -82,7 +83,7 @@ struct Shoupai {
             s += "mpsz"[i];
             for (int j = 0; j < (i < 3 ? 9 : 7); ++j) {
                 int p = i * 9 + j;
-                for (int k = 0; k < bing[p]; ++k) s += std::to_string(j);
+                for (int k = 0; k < bing[p]; ++k) s += std::to_string(j + 1);
             }
         }
         for (auto& mianzi : fulu) {
