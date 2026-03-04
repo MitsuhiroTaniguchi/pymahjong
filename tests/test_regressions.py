@@ -54,6 +54,20 @@ def test_double_iipeikou_with_four_identical_sequences():
     assert h.fanshu == 4  # riichi + ryanpeikou
 
 
+def test_ryuuiisou_without_hatsu():
+    # s22333344466688 (all green tiles in souzu only)
+    counts = [0] * 34
+    counts[19] = 4  # s2
+    counts[20] = 4  # s3
+    counts[21] = 1  # s4
+    counts[23] = 3  # s6
+    counts[25] = 2  # s8
+    h = _hule(counts, 19, menqian=True, lizhi=False)
+    assert h.has_hupai
+    assert ("緑一色", 1) in h.hupai.tolist()
+    assert h.damanguan == 1
+
+
 def test_check_hand_rejects_invalid_total_tiles():
     x = pm.Xiangting()
     with pytest.raises(ValueError):
