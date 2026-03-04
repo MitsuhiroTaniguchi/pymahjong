@@ -87,8 +87,8 @@ struct Hule {
 
     bool eval_possible_hands() {
         uint64_t max_rank = 0;
-        int index = 0;
-        for (auto& hand : _possible_hands) {
+        for (int index = 0; index < static_cast<int>(_possible_hands.size()); ++index) {
+            auto& hand = _possible_hands[index];
             Hupai h = {}; h.is_menqian = option.is_menqian;
             int fu = 20;
             int ankezi = 0, gangzi = 0, head;
@@ -272,7 +272,6 @@ struct Hule {
                 this->hupai = h;
                 this->_argmax_possible_hands = index;
             }
-            ++index;
         }
         return fanshu || damanguan;
     }
