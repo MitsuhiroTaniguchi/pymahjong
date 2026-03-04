@@ -62,6 +62,7 @@ struct Shoupai {
             for (auto& mianzi : fulu) {
                 if (mianzi.fulu_type == Mianzi::peng && mianzi.pai_34 == p) {
                     --bing[p];
+                    if (action.red) red.reset(p / 9);
                     mianzi.fulu_type = Mianzi::minggang;
                     return;
                 }

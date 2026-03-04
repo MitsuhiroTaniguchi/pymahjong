@@ -16,6 +16,19 @@ def _hule_open(counts, melds, win_tile):
     return pm.Hule(shoupai, pm.Action(pm.ActionType.ronghu, win_tile), option)
 
 
+def test_shoupai_bitset_properties_are_python_accessible():
+    s = pm.Shoupai(tuple([0] * 34))
+    s.update()
+
+    assert isinstance(s.tingpai, int)
+    assert isinstance(s.red, int)
+
+    s.tingpai = 0b101
+    s.red = 0b011
+    assert s.tingpai == 0b101
+    assert s.red == 0b011
+
+
 def test_jiagang_consumes_concealed_tile():
     counts = [0] * 34
     counts[0] = 3
@@ -28,6 +41,25 @@ def test_jiagang_consumes_concealed_tile():
     assert shoupai.bing[0] == 0
     assert len(shoupai.fulu) == 1
     assert shoupai.fulu[0].fulu_type == pm.FuluType.minggang
+
+
+def test_jiagang_red_tile_clears_red_flag():
+    # Build 5m x3 with one red tile, call peng without consuming red,
+    # then upgrade to kakan using the red tile.
+    p = 4  # 5m
+    s = pm.Shoupai(tuple([0] * 34))
+    s.apply(pm.Action(pm.ActionType.zimo, p, True))   # red 5m
+    s.apply(pm.Action(pm.ActionType.zimo, p, False))
+    s.apply(pm.Action(pm.ActionType.zimo, p, False))
+    assert s.red == 0b001
+
+    s.apply(pm.Action(pm.ActionType.peng, p, False))
+    assert s.bing[p] == 1
+    assert s.red == 0b001
+
+    s.apply(pm.Action(pm.ActionType.jiagang, p, True))
+    assert s.bing[p] == 0
+    assert s.red == 0
 
 
 def test_shanpon_ron_uses_open_triplet_fu():
