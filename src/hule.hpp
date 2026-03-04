@@ -252,6 +252,7 @@ struct Hule {
             }
 
             auto [fanshu, damanguan] = h.sum();
+            if (fanshu == 0 && damanguan == 0) continue;
             uint64_t rank = damanguan << 32 | fanshu << 16 | fu;
             if (rank > max_rank) {
                 max_rank = rank;

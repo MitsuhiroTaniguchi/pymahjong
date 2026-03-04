@@ -171,12 +171,12 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_sp(const std::array<int, 34>&
     if (three_player && i > 0 && i < 8) continue;
 
     if (t[i] == 0) {
-      wait_ |= 1ul << i;
+      wait_ |= 1ull << i;
     }
     else if (t[i] == 1) {
       ++kind;
-      disc_ |= 1ul << i;
-      wait |= 1ul << i;
+      disc_ |= 1ull << i;
+      wait |= 1ull << i;
     }
     else if (t[i] == 2) {
       ++kind;
@@ -185,7 +185,7 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_sp(const std::array<int, 34>&
     else if (t[i] > 2) {
       ++kind;
       ++pair;
-      disc |= 1ul << i;
+      disc |= 1ull << i;
     }
   }
 
@@ -206,26 +206,26 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::array<int, 34>&
 
   for (const int i : {0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33}) {
     if (t[i] == 0) {
-      wait |= 1ul << i;
+      wait |= 1ull << i;
     }
     else if (t[i] == 1) {
       ++kind;
-      wait_ |= 1ul << i;
+      wait_ |= 1ull << i;
     }
     else if (t[i] == 2) {
       ++kind;
       ++pair;
-      disc_ |= 1ul << i;
+      disc_ |= 1ull << i;
     }
     else if (t[i] > 2) {
       ++kind;
       ++pair;
-      disc |= 1ul << i;
+      disc |= 1ull << i;
     }
   }
 
   for (const int i : {1, 2, 3, 4, 5, 6, 7, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25}) {
-    if (t[i] > 0) disc |= 1ul << i;
+    if (t[i] > 0) disc |= 1ull << i;
   }
 
   if (pair >= 2) disc |= disc_;
@@ -271,7 +271,8 @@ std::tuple<int, int, uint64_t, uint64_t> CalshtDW::operator()(const std::array<i
 
     for (int i = 0; i < NUM_TIDS; ++i) {
       if (t[i] < 0 || t[i] > 4) {
-        throw std::invalid_argument("Invalid number of hand's tiles at {}: {}");
+        throw std::invalid_argument(
+            "Invalid number of hand's tiles at " + std::to_string(i) + ": " + std::to_string(t[i]));
       }
 
       n += t[i];
