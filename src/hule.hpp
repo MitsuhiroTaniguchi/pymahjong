@@ -166,6 +166,7 @@ struct Hule {
                 if (not h.平和) {
                     fu += 2 * (qian || bian || danyi);
                     fu += 2 * is_zimohu;
+                    if (not option.is_menqian && not is_zimohu && fu == 20) fu = 30;  // kuipinfu ron special case
                     fu = (fu + 9) / 10 * 10;
                 }
             }
