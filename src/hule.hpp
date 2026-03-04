@@ -27,10 +27,11 @@ struct Hule {
     std::vector<Mianzi> hand;
 
     Shoupai shoupai;
-    bool has_hupai;
+    bool has_hupai = false;
     int fu = 0, fanshu = 0, damanguan = 0;
 
-    int hule_pai; bool is_zimohu;
+    int hule_pai = -1;
+    bool is_zimohu = false;
     HuleOption option;
     Hupai hupai;
 

@@ -61,6 +61,7 @@ struct Shoupai {
         case Action::jiagang:
             for (auto& mianzi : fulu) {
                 if (mianzi.fulu_type == Mianzi::peng && mianzi.pai_34 == p) {
+                    --bing[p];
                     mianzi.fulu_type = Mianzi::minggang;
                     return;
                 }
