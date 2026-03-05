@@ -65,6 +65,30 @@ bool has_hupai_impl(const std::array<int, 34>& hand,
     Hule hule(shoupai, action, option);
     return hule.has_hupai;
 }
+
+bool has_hupai_impl_ex(const std::array<int, 34>& hand,
+                       const std::vector<std::pair<int, int>>& melds,
+                       int win_tile,
+                       bool is_tsumo,
+                       bool is_menqian,
+                       bool is_riichi,
+                       int zhuangfeng,
+                       int lunban,
+                       bool is_haidi,
+                       bool is_lingshang,
+                       bool is_qianggang) {
+    auto fulu = encode_melds(melds);
+    Shoupai shoupai = fulu.empty() ? Shoupai(hand) : Shoupai(hand, fulu);
+    HuleOption option(zhuangfeng, lunban);
+    option.is_menqian = is_menqian;
+    option.is_lizhi = is_riichi;
+    option.is_haidi = is_haidi;
+    option.is_lingshang = is_lingshang;
+    option.is_qianggang = is_qianggang;
+    Action action(is_tsumo ? Action::zimohu : Action::ronghu, win_tile);
+    Hule hule(shoupai, action, option);
+    return hule.has_hupai;
+}
 }  // namespace
 
 PYBIND11_MODULE(pymahjong, m) {
@@ -197,14 +221,8 @@ PYBIND11_MODULE(pymahjong, m) {
         .def_readwrite("fulu", &Shoupai::fulu)
         .def_readwrite("xiangting", &Shoupai::xiangting)
         .def_readwrite("mode", &Shoupai::mode)
-        .def_property(
-            "tingpai",
-            [](const Shoupai& s) { return static_cast<std::uint64_t>(s.tingpai.to_ullong()); },
-            [](Shoupai& s, std::uint64_t v) { s.tingpai = std::bitset<34>(v); })
-        .def_property(
-            "red",
-            [](const Shoupai& s) { return static_cast<std::uint8_t>(s.red.to_ulong()); },
-            [](Shoupai& s, std::uint8_t v) { s.red = std::bitset<3>(v); })
+        .def_readwrite("tingpai", &Shoupai::tingpai)
+        .def_readwrite("red", &Shoupai::red)
         .def("apply", &Shoupai::apply)
         .def("update", &Shoupai::update)
         .def("tingpai_mask", [](const Shoupai& shoupai) {
@@ -248,9 +266,22 @@ PYBIND11_MODULE(pymahjong, m) {
              bool is_menqian,
              bool is_riichi,
              int zhuangfeng,
-             int lunban) {
-              return has_hupai_impl(
-                  hand, melds, win_tile, is_tsumo, is_menqian, is_riichi, zhuangfeng, lunban);
+             int lunban,
+             bool is_haidi,
+             bool is_lingshang,
+             bool is_qianggang) {
+              return has_hupai_impl_ex(
+                  hand,
+                  melds,
+                  win_tile,
+                  is_tsumo,
+                  is_menqian,
+                  is_riichi,
+                  zhuangfeng,
+                  lunban,
+                  is_haidi,
+                  is_lingshang,
+                  is_qianggang);
           },
           py::arg("hand"),
           py::arg("melds"),
@@ -259,7 +290,10 @@ PYBIND11_MODULE(pymahjong, m) {
           py::arg("is_menqian"),
           py::arg("is_riichi"),
           py::arg("zhuangfeng"),
-          py::arg("lunban"));
+          py::arg("lunban"),
+          py::arg("is_haidi"),
+          py::arg("is_lingshang"),
+          py::arg("is_qianggang"));
 
     m.def("has_hupai_multi",
           [](const std::vector<std::tuple<
@@ -270,11 +304,14 @@ PYBIND11_MODULE(pymahjong, m) {
                  bool,
                  bool,
                  int,
-                 int>>& cases) {
+                 int,
+                 bool,
+                 bool,
+                 bool>>& cases) {
               std::vector<bool> out;
               out.reserve(cases.size());
               for (const auto& c : cases) {
-                  out.push_back(has_hupai_impl(
+                  out.push_back(has_hupai_impl_ex(
                       std::get<0>(c),
                       std::get<1>(c),
                       std::get<2>(c),
@@ -282,7 +319,10 @@ PYBIND11_MODULE(pymahjong, m) {
                       std::get<4>(c),
                       std::get<5>(c),
                       std::get<6>(c),
-                      std::get<7>(c)));
+                      std::get<7>(c),
+                      std::get<8>(c),
+                      std::get<9>(c),
+                      std::get<10>(c)));
               }
               return out;
           },
@@ -297,9 +337,21 @@ PYBIND11_MODULE(pymahjong, m) {
              int zhuangfeng,
              int lunban,
              int closed_kans,
-             bool check_riichi_discard) {
-              bool can_tsumo = has_hupai_impl(
-                  hand, melds, win_tile, true, is_menqian, is_riichi, zhuangfeng, lunban);
+             bool check_riichi_discard,
+             bool is_haidi,
+             bool is_lingshang) {
+              bool can_tsumo = has_hupai_impl_ex(
+                  hand,
+                  melds,
+                  win_tile,
+                  true,
+                  is_menqian,
+                  is_riichi,
+                  zhuangfeng,
+                  lunban,
+                  is_haidi,
+                  is_lingshang,
+                  false);
               bool can_riichi_discard = false;
 
               if (check_riichi_discard) {
@@ -328,7 +380,9 @@ PYBIND11_MODULE(pymahjong, m) {
           py::arg("zhuangfeng"),
           py::arg("lunban"),
           py::arg("closed_kans"),
-          py::arg("check_riichi_discard"));
+          py::arg("check_riichi_discard"),
+          py::arg("is_haidi"),
+          py::arg("is_lingshang"));
 
     // Action の enum バインディング
     py::enum_<Action::Type>(m, "ActionType")

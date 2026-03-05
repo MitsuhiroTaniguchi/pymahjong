@@ -124,9 +124,17 @@ class CMakeBuild(build_ext):
         if not build_temp.exists():
             build_temp.mkdir(parents=True)
 
-        subprocess.run(
-            ["cmake", ext.sourcedir, "-DCMAKE_C_COMPILER=gcc", "-DCMAKE_CXX_COMPILER=g++"] + cmake_args, cwd=build_temp, check=True
-        )
+        cmake_configure_cmd = ["cmake", ext.sourcedir]
+        if os.environ.get("CMAKE_C_COMPILER"):
+            cmake_configure_cmd.append(
+                f"-DCMAKE_C_COMPILER={os.environ['CMAKE_C_COMPILER']}"
+            )
+        if os.environ.get("CMAKE_CXX_COMPILER"):
+            cmake_configure_cmd.append(
+                f"-DCMAKE_CXX_COMPILER={os.environ['CMAKE_CXX_COMPILER']}"
+            )
+        cmake_configure_cmd += cmake_args
+        subprocess.run(cmake_configure_cmd, cwd=build_temp, check=True)
         subprocess.run(
             ["cmake", "--build", "."] + build_args, cwd=build_temp, check=True
         )
