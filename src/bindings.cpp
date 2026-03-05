@@ -355,7 +355,7 @@ PYBIND11_MODULE(pymahjong, m) {
               bool can_riichi_discard = false;
 
               if (check_riichi_discard) {
-                  CalshtDW xiangting_calculator;
+                  static CalshtDW xiangting_calculator;
                   auto base = hand;
                   for (int i = 0; i < 34; ++i) {
                       if (base[i] == 0) continue;
