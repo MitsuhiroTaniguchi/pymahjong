@@ -266,27 +266,6 @@ PYBIND11_MODULE(pymahjong, m) {
              bool is_menqian,
              bool is_riichi,
              int zhuangfeng,
-             int lunban) {
-              return has_hupai_impl(
-                  hand, melds, win_tile, is_tsumo, is_menqian, is_riichi, zhuangfeng, lunban);
-          },
-          py::arg("hand"),
-          py::arg("melds"),
-          py::arg("win_tile"),
-          py::arg("is_tsumo"),
-          py::arg("is_menqian"),
-          py::arg("is_riichi"),
-          py::arg("zhuangfeng"),
-          py::arg("lunban"));
-
-    m.def("has_hupai_ex",
-          [](const std::array<int, 34>& hand,
-             const std::vector<std::pair<int, int>>& melds,
-             int win_tile,
-             bool is_tsumo,
-             bool is_menqian,
-             bool is_riichi,
-             int zhuangfeng,
              int lunban,
              bool is_haidi,
              bool is_lingshang,
@@ -325,33 +304,6 @@ PYBIND11_MODULE(pymahjong, m) {
                  bool,
                  bool,
                  int,
-                 int>>& cases) {
-              std::vector<bool> out;
-              out.reserve(cases.size());
-              for (const auto& c : cases) {
-                  out.push_back(has_hupai_impl(
-                      std::get<0>(c),
-                      std::get<1>(c),
-                      std::get<2>(c),
-                      std::get<3>(c),
-                      std::get<4>(c),
-                      std::get<5>(c),
-                      std::get<6>(c),
-                      std::get<7>(c)));
-              }
-              return out;
-          },
-          py::arg("cases"));
-
-    m.def("has_hupai_multi_ex",
-          [](const std::vector<std::tuple<
-                 std::array<int, 34>,
-                 std::vector<std::pair<int, int>>,
-                 int,
-                 bool,
-                 bool,
-                 bool,
-                 int,
                  int,
                  bool,
                  bool,
@@ -377,48 +329,6 @@ PYBIND11_MODULE(pymahjong, m) {
           py::arg("cases"));
 
     m.def("evaluate_draw",
-          [](const std::array<int, 34>& hand,
-             const std::vector<std::pair<int, int>>& melds,
-             int win_tile,
-             bool is_menqian,
-             bool is_riichi,
-             int zhuangfeng,
-             int lunban,
-             int closed_kans,
-             bool check_riichi_discard) {
-              bool can_tsumo = has_hupai_impl(
-                  hand, melds, win_tile, true, is_menqian, is_riichi, zhuangfeng, lunban);
-              bool can_riichi_discard = false;
-
-              if (check_riichi_discard) {
-                  CalshtDW xiangting_calculator;
-                  auto base = hand;
-                  for (int i = 0; i < 34; ++i) {
-                      if (base[i] == 0) continue;
-                      --base[i];
-                      auto [x, _mode, _disc, _wait] = xiangting_calculator(
-                          base, 4 - closed_kans, 7, false, false);
-                      ++base[i];
-                      if (x == 0) {
-                          can_riichi_discard = true;
-                          break;
-                      }
-                  }
-              }
-
-              return py::make_tuple(can_tsumo, can_riichi_discard);
-          },
-          py::arg("hand"),
-          py::arg("melds"),
-          py::arg("win_tile"),
-          py::arg("is_menqian"),
-          py::arg("is_riichi"),
-          py::arg("zhuangfeng"),
-          py::arg("lunban"),
-          py::arg("closed_kans"),
-          py::arg("check_riichi_discard"));
-
-    m.def("evaluate_draw_ex",
           [](const std::array<int, 34>& hand,
              const std::vector<std::pair<int, int>>& melds,
              int win_tile,
