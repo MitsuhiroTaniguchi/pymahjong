@@ -128,3 +128,52 @@ def test_check_hand_rejects_invalid_total_tiles():
     x = pm.Xiangting()
     with pytest.raises(ValueError):
         x.calculate(tuple([4] * 34), 4, 7, True, False)
+
+
+def test_compute_self_option_mask_exposes_tsumo_riichi_and_kyushukyuhai():
+    counts = [0] * 34
+    for idx in [0, 0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33]:
+        counts[idx] += 1
+    mask = pm.compute_self_option_mask(
+        tuple(counts),
+        [],
+        33,
+        False,
+        25000,
+        0,
+        0,
+        10,
+        0,
+        0,
+        [],
+        True,
+        False,
+        False,
+    )
+    assert mask & pm.SELF_OPT_TSUMO
+    assert mask & pm.SELF_OPT_RIICHI
+    assert mask & pm.SELF_OPT_KYUSHUKYUHAI
+
+
+def test_compute_reaction_option_masks_reports_chi_pon_and_ron():
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {0, 2} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 1, 0, 0, 10, False))
+    assert options[1] & pm.REACT_OPT_CHI
+    assert options[2] & pm.REACT_OPT_PON
+    assert options[3] & pm.REACT_OPT_PON
+
+
+def test_compute_rob_kan_option_masks_can_require_kokushi():
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_rob_kan_option_masks(players, 0, 33, 0, 0, True))
+    assert options[1] & pm.REACT_OPT_RON
