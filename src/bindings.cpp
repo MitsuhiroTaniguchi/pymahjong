@@ -162,6 +162,58 @@ bool can_chi_impl(const std::array<int, 34>& hand, int tile_idx) {
     return false;
 }
 
+bool has_legal_post_call_discard_impl(
+    const std::array<int, 34>& hand,
+    const std::vector<int>& forbidden_tiles
+) {
+    std::array<bool, 34> forbidden{};
+    for (int tile : forbidden_tiles) {
+        if (tile >= 0 && tile < 34) forbidden[tile] = true;
+    }
+    for (int tile = 0; tile < 34; ++tile) {
+        if (hand[tile] <= 0) continue;
+        if (!forbidden[tile]) return true;
+    }
+    return false;
+}
+
+bool can_chi_tenhou_impl(const std::array<int, 34>& hand, int tile_idx) {
+    if (tile_idx >= 27) return false;
+    int suit_base = (tile_idx / 9) * 9;
+    int n = tile_idx % 9 + 1;
+    const std::array<std::pair<int, int>, 3> patterns = {{
+        {n - 2, n - 1},
+        {n - 1, n + 1},
+        {n + 1, n + 2},
+    }};
+    for (const auto& [a, b] : patterns) {
+        if (a < 1 || b > 9) continue;
+        int ai = suit_base + (a - 1);
+        int bi = suit_base + (b - 1);
+        if (hand[ai] <= 0 || hand[bi] <= 0) continue;
+        auto remaining = hand;
+        --remaining[ai];
+        --remaining[bi];
+        int seq_low = std::min({ai, bi, tile_idx});
+        int seq_high = std::max({ai, bi, tile_idx});
+        std::vector<int> forbidden = {tile_idx};
+        if (tile_idx == seq_low && seq_high + 1 < suit_base + 9) {
+            forbidden.push_back(seq_high + 1);
+        } else if (tile_idx == seq_high && seq_low - 1 >= suit_base) {
+            forbidden.push_back(seq_low - 1);
+        }
+        if (has_legal_post_call_discard_impl(remaining, forbidden)) return true;
+    }
+    return false;
+}
+
+bool can_pon_tenhou_impl(const std::array<int, 34>& hand, int tile_idx) {
+    if (tile_idx < 0 || tile_idx >= 34 || hand[tile_idx] < 2) return false;
+    auto remaining = hand;
+    remaining[tile_idx] -= 2;
+    return has_legal_post_call_discard_impl(remaining, {tile_idx});
+}
+
 bool can_ankan_impl(
     const std::array<int, 34>& hand,
     int meld_count,
@@ -327,8 +379,8 @@ std::vector<std::pair<int, int>> compute_reaction_option_masks_impl(
             if (can_ron) option_mask |= REACT_OPT_RON;
         }
         if (!is_riichi && live_draws_left > 0) {
-            if (offset == 1 && can_chi_impl(hand, tile_idx)) option_mask |= REACT_OPT_CHI;
-            if (hand[tile_idx] >= 2) option_mask |= REACT_OPT_PON;
+            if (offset == 1 && can_chi_tenhou_impl(hand, tile_idx)) option_mask |= REACT_OPT_CHI;
+            if (can_pon_tenhou_impl(hand, tile_idx)) option_mask |= REACT_OPT_PON;
             if (hand[tile_idx] >= 3) option_mask |= REACT_OPT_MINKAN;
         }
         if (option_mask != 0) out.emplace_back(seat, option_mask);
@@ -455,8 +507,8 @@ std::vector<std::pair<int, int>> compute_reaction_option_masks_shoupai_impl(
             if (can_ron) option_mask |= REACT_OPT_RON;
         }
         if (!is_riichi && live_draws_left > 0) {
-            if (offset == 1 && can_chi_impl(shoupai.bing, tile_idx)) option_mask |= REACT_OPT_CHI;
-            if (shoupai.bing[tile_idx] >= 2) option_mask |= REACT_OPT_PON;
+            if (offset == 1 && can_chi_tenhou_impl(shoupai.bing, tile_idx)) option_mask |= REACT_OPT_CHI;
+            if (can_pon_tenhou_impl(shoupai.bing, tile_idx)) option_mask |= REACT_OPT_PON;
             if (shoupai.bing[tile_idx] >= 3) option_mask |= REACT_OPT_MINKAN;
         }
         if (option_mask != 0) out.emplace_back(seat, option_mask);

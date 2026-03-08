@@ -158,14 +158,90 @@ def test_compute_self_option_mask_exposes_tsumo_riichi_and_kyushukyuhai():
 def test_compute_reaction_option_masks_reports_chi_pon_and_ron():
     players = [
         (tuple([0] * 34), [], False, False, False, 0, 0),
-        (tuple([1 if i in {0, 2} else 0 for i in range(34)]), [], False, False, False, 0, 0),
-        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
-        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([1 if i in {0, 2, 4} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 1 if i == 3 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 1 if i == 4 else 0 for i in range(34)]), [], False, False, False, 0, 0),
     ]
     options = dict(pm.compute_reaction_option_masks(players, 0, 1, 0, 0, 10, False))
     assert options[1] & pm.REACT_OPT_CHI
     assert options[2] & pm.REACT_OPT_PON
     assert options[3] & pm.REACT_OPT_PON
+
+
+def test_compute_reaction_option_masks_applies_tenhou_kuikae_to_chi_and_pon():
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {0, 1, 2} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 3, 0, 0, 10, False))
+    assert 1 not in options
+
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {1, 2, 4} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 3, 0, 0, 10, False))
+    assert options[1] & pm.REACT_OPT_CHI
+
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 1, 0, 0, 10, False))
+    assert 1 not in options
+
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {1, 2, 4} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 0, 0, 0, 10, False))
+    assert options[1] & pm.REACT_OPT_CHI
+
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {1, 2, 3} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 0, 0, 0, 10, False))
+    assert 1 not in options
+
+
+def test_compute_reaction_option_masks_shoupai_applies_tenhou_kuikae_to_chi_and_pon():
+    players = [
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([1 if i in {0, 1, 2} else 0 for i in range(34)])), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([2 if i == 1 else 0 for i in range(34)])), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks_shoupai(players, 0, 3, 0, 0, 10, False))
+    assert 1 not in options
+
+    players = [
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([1 if i in {1, 2, 4} else 0 for i in range(34)])), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([2 if i == 1 else 0 for i in range(34)])), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks_shoupai(players, 0, 3, 0, 0, 10, False))
+    assert options[1] & pm.REACT_OPT_CHI
+
+    players = [
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([2 if i == 1 else 0 for i in range(34)])), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+        (pm.Shoupai(tuple([0] * 34)), False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks_shoupai(players, 0, 1, 0, 0, 10, False))
+    assert 1 not in options
 
 
 def test_compute_rob_kan_option_masks_can_require_kokushi():
