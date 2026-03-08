@@ -179,6 +179,19 @@ bool has_legal_post_call_discard_impl(
     return false;
 }
 
+bool has_legal_post_call_discard_impl(
+    const std::array<int, 34>& hand,
+    int forbidden_a,
+    int forbidden_b = -1
+) {
+    for (int tile = 0; tile < 34; ++tile) {
+        if (hand[tile] <= 0) continue;
+        if (tile == forbidden_a || tile == forbidden_b) continue;
+        return true;
+    }
+    return false;
+}
+
 bool can_chi_tenhou_impl(const std::array<int, 34>& hand, int tile_idx) {
     if (tile_idx >= 27) return false;
     int suit_base = (tile_idx / 9) * 9;
@@ -198,13 +211,15 @@ bool can_chi_tenhou_impl(const std::array<int, 34>& hand, int tile_idx) {
         --remaining[bi];
         int seq_low = std::min({ai, bi, tile_idx});
         int seq_high = std::max({ai, bi, tile_idx});
-        std::vector<int> forbidden = {tile_idx};
         if (tile_idx == seq_low && seq_high + 1 < suit_base + 9) {
-            forbidden.push_back(seq_high + 1);
-        } else if (tile_idx == seq_high && seq_low - 1 >= suit_base) {
-            forbidden.push_back(seq_low - 1);
+            if (has_legal_post_call_discard_impl(remaining, tile_idx, seq_high + 1)) return true;
+            continue;
         }
-        if (has_legal_post_call_discard_impl(remaining, forbidden)) return true;
+        if (tile_idx == seq_high && seq_low - 1 >= suit_base) {
+            if (has_legal_post_call_discard_impl(remaining, tile_idx, seq_low - 1)) return true;
+            continue;
+        }
+        if (has_legal_post_call_discard_impl(remaining, tile_idx)) return true;
     }
     return false;
 }
@@ -213,14 +228,15 @@ bool can_pon_tenhou_impl(const std::array<int, 34>& hand, int tile_idx) {
     if (tile_idx < 0 || tile_idx >= 34 || hand[tile_idx] < 2) return false;
     auto remaining = hand;
     remaining[tile_idx] -= 2;
-    return has_legal_post_call_discard_impl(remaining, {tile_idx});
+    return has_legal_post_call_discard_impl(remaining, tile_idx);
 }
 
 bool can_ankan_impl(
     const std::array<int, 34>& hand,
     int meld_count,
     bool is_riichi,
-    int drawn_tile
+    int drawn_tile,
+    bool three_player
 ) {
     bool any_candidate = false;
     for (int tile = 0; tile < 34; ++tile) {
@@ -231,11 +247,11 @@ bool can_ankan_impl(
         auto pre_draw = hand;
         if (pre_draw[drawn_tile] <= 0) continue;
         --pre_draw[drawn_tile];
-        uint64_t waits_before = wait_mask_impl(pre_draw, meld_count);
+        uint64_t waits_before = wait_mask_impl(pre_draw, meld_count, three_player);
         if (waits_before == 0) continue;
         auto after = hand;
         after[tile] -= 4;
-        uint64_t waits_after = wait_mask_impl(after, meld_count + 1);
+        uint64_t waits_after = wait_mask_impl(after, meld_count + 1, three_player);
         if (waits_after != 0 && waits_after == waits_before) return true;
     }
     return !is_riichi && any_candidate;
@@ -313,7 +329,7 @@ int compute_self_option_mask_impl(
         false);
     if (can_tsumo) mask |= SELF_OPT_TSUMO;
     if (can_riichi && has_riichi_discard_impl(hand, closed_kans, three_player)) mask |= SELF_OPT_RIICHI;
-    if (can_ankan_impl(hand, static_cast<int>(melds.size()), is_riichi, drawn_tile)) mask |= SELF_OPT_ANKAN;
+    if (can_ankan_impl(hand, static_cast<int>(melds.size()), is_riichi, drawn_tile, three_player)) mask |= SELF_OPT_ANKAN;
     for (int tile : open_pon_tiles) {
         if (tile >= 0 && tile < 34 && hand[tile] > 0) {
             mask |= SELF_OPT_KAKAN;
@@ -337,6 +353,17 @@ using ReactionPlayerInput = std::tuple<
     bool,
     uint64_t,
     int
+>;
+
+using ReactionPlayerCachedInput = std::tuple<
+    std::array<int, 34>,
+    std::vector<std::pair<int, int>>,
+    bool,
+    bool,
+    bool,
+    uint64_t,
+    int,
+    uint64_t
 >;
 
 using ReactionShoupaiInput = std::tuple<
@@ -396,6 +423,50 @@ std::vector<std::pair<int, int>> compute_reaction_option_masks_impl(
     return out;
 }
 
+std::vector<std::pair<int, int>> compute_reaction_option_masks_cached_impl(
+    const std::vector<ReactionPlayerCachedInput>& players,
+    int discarder,
+    int tile_idx,
+    int zhuangfeng,
+    int dealer_seat,
+    int live_draws_left,
+    bool last_draw_was_gangzimo
+) {
+    std::vector<std::pair<int, int>> out;
+    out.reserve(players.size() > 0 ? players.size() - 1 : 0);
+    bool is_haidi = live_draws_left == 0 && !last_draw_was_gangzimo;
+    int seat_count = static_cast<int>(players.size());
+    for (int offset = 1; offset < seat_count; ++offset) {
+        int seat = (discarder + offset) % seat_count;
+        const auto& [hand, melds, is_riichi, temporary_furiten, riichi_furiten, furiten_mask, open_melds, waits] = players[seat];
+        int option_mask = 0;
+        bool permanent_furiten = (waits & furiten_mask) != 0;
+        if (!temporary_furiten && !riichi_furiten && !permanent_furiten && ((waits >> tile_idx) & 1ULL)) {
+            auto ron_hand = hand;
+            ++ron_hand[tile_idx];
+            bool can_ron = has_hupai_impl_ex(
+                ron_hand,
+                melds,
+                tile_idx,
+                false,
+                open_melds == 0,
+                is_riichi,
+                zhuangfeng,
+                (seat - dealer_seat + seat_count) % seat_count,
+                is_haidi,
+                false,
+                false);
+            if (can_ron) option_mask |= REACT_OPT_RON;
+        }
+        if (!is_riichi && live_draws_left > 0) {
+            if (can_pon_tenhou_impl(hand, tile_idx)) option_mask |= REACT_OPT_PON;
+            if (hand[tile_idx] >= 3) option_mask |= REACT_OPT_MINKAN;
+        }
+        if (option_mask != 0) out.emplace_back(seat, option_mask);
+    }
+    return out;
+}
+
 std::vector<std::pair<int, int>> compute_rob_kan_option_masks_impl(
     const std::vector<ReactionPlayerInput>& players,
     int actor,
@@ -420,6 +491,44 @@ std::vector<std::pair<int, int>> compute_rob_kan_option_masks_impl(
         auto ron_hand = hand;
         ++ron_hand[tile_idx];
         if (require_kokushi && !is_kokushi_agari_shape_impl(ron_hand, meld_count)) continue;
+        bool can_ron = has_hupai_impl_ex(
+            ron_hand,
+            melds,
+            tile_idx,
+            false,
+            open_melds == 0,
+            is_riichi,
+            zhuangfeng,
+            (seat - dealer_seat + seat_count) % seat_count,
+            false,
+            false,
+            true);
+        if (can_ron) out.emplace_back(seat, REACT_OPT_RON);
+    }
+    return out;
+}
+
+std::vector<std::pair<int, int>> compute_rob_kan_option_masks_cached_impl(
+    const std::vector<ReactionPlayerCachedInput>& players,
+    int actor,
+    int tile_idx,
+    int zhuangfeng,
+    int dealer_seat,
+    bool require_kokushi
+) {
+    std::vector<std::pair<int, int>> out;
+    out.reserve(players.size() > 0 ? players.size() - 1 : 0);
+    int seat_count = static_cast<int>(players.size());
+    for (int seat = 0; seat < seat_count; ++seat) {
+        if (seat == actor) continue;
+        const auto& [hand, melds, is_riichi, temporary_furiten, riichi_furiten, furiten_mask, open_melds, waits] = players[seat];
+        bool permanent_furiten = (waits & furiten_mask) != 0;
+        if (temporary_furiten || riichi_furiten || permanent_furiten || ((waits >> tile_idx) & 1ULL) == 0) {
+            continue;
+        }
+        auto ron_hand = hand;
+        ++ron_hand[tile_idx];
+        if (require_kokushi && !is_kokushi_agari_shape_impl(ron_hand, static_cast<int>(melds.size()))) continue;
         bool can_ron = has_hupai_impl_ex(
             ron_hand,
             melds,
@@ -468,7 +577,12 @@ int compute_self_option_mask_shoupai_impl(
         false);
     if (can_tsumo) mask |= SELF_OPT_TSUMO;
     if (can_riichi && has_riichi_discard_impl(shoupai.bing, closed_kans, three_player)) mask |= SELF_OPT_RIICHI;
-    if (can_ankan_impl(shoupai.bing, static_cast<int>(shoupai.fulu.size()), is_riichi, drawn_tile)) {
+    if (can_ankan_impl(
+            shoupai.bing,
+            static_cast<int>(shoupai.fulu.size()),
+            is_riichi,
+            drawn_tile,
+            three_player)) {
         mask |= SELF_OPT_ANKAN;
     }
     for (int tile : open_pon_tiles) {
@@ -941,6 +1055,16 @@ PYBIND11_MODULE(pymahjong, m) {
           py::arg("last_draw_was_gangzimo"),
           py::arg("three_player") = false);
 
+    m.def("compute_reaction_option_masks_cached",
+          &compute_reaction_option_masks_cached_impl,
+          py::arg("players"),
+          py::arg("discarder"),
+          py::arg("tile_idx"),
+          py::arg("zhuangfeng"),
+          py::arg("dealer_seat"),
+          py::arg("live_draws_left"),
+          py::arg("last_draw_was_gangzimo"));
+
     m.def("compute_rob_kan_option_masks",
           &compute_rob_kan_option_masks_impl,
           py::arg("players"),
@@ -950,6 +1074,15 @@ PYBIND11_MODULE(pymahjong, m) {
           py::arg("dealer_seat"),
           py::arg("require_kokushi"),
           py::arg("three_player") = false);
+
+    m.def("compute_rob_kan_option_masks_cached",
+          &compute_rob_kan_option_masks_cached_impl,
+          py::arg("players"),
+          py::arg("actor"),
+          py::arg("tile_idx"),
+          py::arg("zhuangfeng"),
+          py::arg("dealer_seat"),
+          py::arg("require_kokushi"));
 
     m.def("compute_self_option_mask_shoupai",
           &compute_self_option_mask_shoupai_impl,

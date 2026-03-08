@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
+if(POLICY CMP0069)
+    cmake_policy(SET CMP0069 NEW)
+endif()
 
 project(pymahjong)
 
@@ -13,6 +16,12 @@ find_package(pybind11 CONFIG REQUIRED)
 pybind11_add_module(pymahjong SHARED src/bindings.cpp src/calsht_dw.cpp)
 
 target_include_directories(pymahjong PRIVATE src)
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_error)
+if(ipo_supported)
+    set_property(TARGET pymahjong PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
+endif()
 
 # EXAMPLE_VERSION_INFO is defined by setup.py and passed into the C++ code as a
 # define (VERSION_INFO) here.

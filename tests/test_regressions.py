@@ -204,6 +204,21 @@ def test_compute_reaction_option_masks_three_player_disables_chi_and_uses_three_
     assert options[2] & pm.REACT_OPT_PON
 
 
+def test_compute_reaction_option_masks_cached_matches_three_player_stateless() -> None:
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {9, 11} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 10 else 1 if i == 12 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+    ]
+    cached_players = [
+        (*player, pm.wait_mask(player[0], len(player[1]), True))
+        for player in players
+    ]
+    assert pm.compute_reaction_option_masks_cached(cached_players, 0, 10, 0, 0, 10, False) == pm.compute_reaction_option_masks(
+        players, 0, 10, 0, 0, 10, False, True
+    )
+
+
 def test_compute_reaction_option_masks_applies_tenhou_kuikae_to_chi_and_pon():
     players = [
         (tuple([0] * 34), [], False, False, False, 0, 0),
