@@ -214,8 +214,24 @@ def test_compute_reaction_option_masks_cached_matches_three_player_stateless() -
         (*player, pm.wait_mask(player[0], len(player[1]), True))
         for player in players
     ]
-    assert pm.compute_reaction_option_masks_cached(cached_players, 0, 10, 0, 0, 10, False) == pm.compute_reaction_option_masks(
+    assert pm.compute_reaction_option_masks_cached(cached_players, 0, 10, 0, 0, 10, False, True) == pm.compute_reaction_option_masks(
         players, 0, 10, 0, 0, 10, False, True
+    )
+
+
+def test_compute_reaction_option_masks_cached_matches_four_player_stateless() -> None:
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {0, 2, 4} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 1 if i == 3 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 1 else 1 if i == 4 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+    ]
+    cached_players = [
+        (*player, pm.wait_mask(player[0], len(player[1]), False))
+        for player in players
+    ]
+    assert pm.compute_reaction_option_masks_cached(cached_players, 0, 1, 0, 0, 10, False) == pm.compute_reaction_option_masks(
+        players, 0, 1, 0, 0, 10, False
     )
 
 

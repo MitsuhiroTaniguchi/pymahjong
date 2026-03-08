@@ -430,7 +430,8 @@ std::vector<std::pair<int, int>> compute_reaction_option_masks_cached_impl(
     int zhuangfeng,
     int dealer_seat,
     int live_draws_left,
-    bool last_draw_was_gangzimo
+    bool last_draw_was_gangzimo,
+    bool three_player
 ) {
     std::vector<std::pair<int, int>> out;
     out.reserve(players.size() > 0 ? players.size() - 1 : 0);
@@ -459,6 +460,7 @@ std::vector<std::pair<int, int>> compute_reaction_option_masks_cached_impl(
             if (can_ron) option_mask |= REACT_OPT_RON;
         }
         if (!is_riichi && live_draws_left > 0) {
+            if (!three_player && offset == 1 && can_chi_tenhou_impl(hand, tile_idx)) option_mask |= REACT_OPT_CHI;
             if (can_pon_tenhou_impl(hand, tile_idx)) option_mask |= REACT_OPT_PON;
             if (hand[tile_idx] >= 3) option_mask |= REACT_OPT_MINKAN;
         }
@@ -1063,7 +1065,8 @@ PYBIND11_MODULE(pymahjong, m) {
           py::arg("zhuangfeng"),
           py::arg("dealer_seat"),
           py::arg("live_draws_left"),
-          py::arg("last_draw_was_gangzimo"));
+          py::arg("last_draw_was_gangzimo"),
+          py::arg("three_player") = false);
 
     m.def("compute_rob_kan_option_masks",
           &compute_rob_kan_option_masks_impl,
