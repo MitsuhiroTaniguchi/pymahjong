@@ -155,6 +155,31 @@ def test_compute_self_option_mask_exposes_tsumo_riichi_and_kyushukyuhai():
     assert mask & pm.SELF_OPT_KYUSHUKYUHAI
 
 
+def test_compute_self_option_mask_exposes_penuki_in_three_player() -> None:
+    counts = [0] * 34
+    for idx in [0, 8, 9, 17, 18, 26, 27, 28, 29, 30, 31, 32, 33]:
+        counts[idx] += 1
+    counts[30] += 1
+    mask = pm.compute_self_option_mask(
+        tuple(counts),
+        [],
+        30,
+        False,
+        35000,
+        0,
+        0,
+        10,
+        0,
+        0,
+        [],
+        True,
+        False,
+        False,
+        True,
+    )
+    assert mask & pm.SELF_OPT_PENUKI
+
+
 def test_compute_reaction_option_masks_reports_chi_pon_and_ron():
     players = [
         (tuple([0] * 34), [], False, False, False, 0, 0),
@@ -166,6 +191,17 @@ def test_compute_reaction_option_masks_reports_chi_pon_and_ron():
     assert options[1] & pm.REACT_OPT_CHI
     assert options[2] & pm.REACT_OPT_PON
     assert options[3] & pm.REACT_OPT_PON
+
+
+def test_compute_reaction_option_masks_three_player_disables_chi_and_uses_three_seats() -> None:
+    players = [
+        (tuple([0] * 34), [], False, False, False, 0, 0),
+        (tuple([1 if i in {9, 11} else 0 for i in range(34)]), [], False, False, False, 0, 0),
+        (tuple([2 if i == 10 else 1 if i == 12 else 0 for i in range(34)]), [], False, False, False, 0, 0),
+    ]
+    options = dict(pm.compute_reaction_option_masks(players, 0, 10, 0, 0, 10, False, True))
+    assert 1 not in options
+    assert options[2] & pm.REACT_OPT_PON
 
 
 def test_compute_reaction_option_masks_applies_tenhou_kuikae_to_chi_and_pon():
