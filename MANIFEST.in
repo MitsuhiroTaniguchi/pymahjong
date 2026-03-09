@@ -1,1 +1,1 @@
-recursive-include pymahjong/data *
+recursive-include data *.bin

@@ -1,10 +1,13 @@
 import os
 import re
+import shutil
 import subprocess
 import sys
+import sysconfig
 from pathlib import Path
 
-from setuptools import Extension, setup, find_packages
+from setuptools import Extension, find_packages, setup
+from setuptools.command.build_py import build_py
 from setuptools.command.build_ext import build_ext
 
 # Convert distutils Windows platform specifiers to CMake -A arguments
@@ -108,6 +111,14 @@ class CMakeBuild(build_ext):
         if sys.platform.startswith("darwin"):
             # Cross-compile support for macOS - respect ARCHFLAGS if set
             archs = re.findall(r"-arch (\S+)", os.environ.get("ARCHFLAGS", ""))
+            if not archs:
+                platform_tag = sysconfig.get_platform()
+                if "universal2" in platform_tag:
+                    archs = ["arm64", "x86_64"]
+                elif platform_tag.endswith("-arm64"):
+                    archs = ["arm64"]
+                elif platform_tag.endswith("-x86_64"):
+                    archs = ["x86_64"]
             if archs:
                 cmake_args += ["-DCMAKE_OSX_ARCHITECTURES={}".format(";".join(archs))]
 
@@ -140,6 +151,19 @@ class CMakeBuild(build_ext):
         )
 
 
+class BuildPy(build_py):
+    def run(self) -> None:
+        super().run()
+        self._copy_package_data()
+
+    def _copy_package_data(self) -> None:
+        package_dir = Path(self.build_lib) / "pymahjong"
+        data_dir = package_dir / "data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+        for filename in ("index_dw_s.bin", "index_dw_h.bin"):
+            shutil.copy2(Path("data") / filename, data_dir / filename)
+
+
 # The information here can also be placed in setup.cfg - better separation of
 # logic and declaration, and simpler if you include description/version in a file.
 setup(
@@ -149,13 +173,12 @@ setup(
     author_email="michw.com.sub@gmail.com",
     description="fast mahjong tools written in c++ with pybind 11",
     long_description="",
-    ext_modules=[CMakeExtension("pymahjong")],
-    cmdclass={"build_ext": CMakeBuild},
+    ext_modules=[CMakeExtension("pymahjong._core")],
+    cmdclass={"build_ext": CMakeBuild, "build_py": BuildPy},
     zip_safe=False,
     extras_require={"test": ["pytest>=6.0"]},
     python_requires=">=3.6",
     install_requires=["pybind11"],
     packages=find_packages(),
-    include_package_data=True,
     package_data={"pymahjong": ["data/*.bin"]},
 )
