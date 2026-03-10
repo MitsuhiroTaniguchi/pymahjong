@@ -732,7 +732,7 @@ bool has_hupai_impl_ex(const std::array<int, 34>& hand,
 }
 }  // namespace
 
-PYBIND11_MODULE(pymahjong, m) {
+PYBIND11_MODULE(_core, m) {
     m.doc() = "pymahjong: mahjong calculation library written in c++ with python bindings";
 
     // Xiangting (CalshtDW) のバインディング

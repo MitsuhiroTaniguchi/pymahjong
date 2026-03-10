@@ -120,7 +120,7 @@ void CalshtDW::read_file(Iter first, Iter last, std::filesystem::path file) cons
   std::ifstream fin(file, std::ios_base::in | std::ios_base::binary);
 
   if (!fin) {
-    throw std::runtime_error(file);
+    throw std::runtime_error("Failed to open file: " + file.string());
   }
 
   for (; first != last; ++first) {
@@ -235,26 +235,56 @@ std::tuple<int, uint64_t, uint64_t> CalshtDW::calc_to(const std::array<int, 34>&
 }
 
 std::filesystem::path get_module_path() {
-    PyObject* module = PyImport_ImportModule("pymahjong");
+    PyObject* module = PyImport_ImportModule("pymahjong._core");
     if (!module) {
-        throw std::runtime_error("Failed to import module 'pymahjong'");
+        throw std::runtime_error("Failed to import module 'pymahjong._core'");
     }
     PyObject* file_attr = PyObject_GetAttrString(module, "__file__");
     Py_DECREF(module);
     if (!file_attr) {
-        throw std::runtime_error("Module 'pymahjong' has no __file__ attribute");
+        throw std::runtime_error("Module 'pymahjong._core' has no __file__ attribute");
     }
+    std::filesystem::path module_path;
+#ifdef _WIN32
+    Py_ssize_t size = 0;
+    wchar_t* path_w = PyUnicode_AsWideCharString(file_attr, &size);
+    Py_DECREF(file_attr);
+    if (!path_w) {
+        throw std::runtime_error("Failed to get module file path");
+    }
+    module_path = std::filesystem::path(path_w);
+    PyMem_Free(path_w);
+#else
     const char* path_c = PyUnicode_AsUTF8(file_attr);
     Py_DECREF(file_attr);
     if (!path_c) {
         throw std::runtime_error("Failed to get module file path");
     }
-    return std::filesystem::path(path_c);
+    module_path = std::filesystem::path(path_c);
+#endif
+    return module_path;
+}
+
+std::filesystem::path resolve_data_dir(const std::filesystem::path& module_path) {
+    const std::array<std::filesystem::path, 2> candidates = {
+        module_path.parent_path() / "data",
+        module_path.parent_path().parent_path() / "data",
+    };
+
+    for (const auto& candidate : candidates) {
+        if (std::filesystem::exists(candidate / "index_dw_s.bin") &&
+            std::filesystem::exists(candidate / "index_dw_h.bin")) {
+            return candidate;
+        }
+    }
+
+    throw std::runtime_error(
+        "Failed to locate data directory next to module or project root");
 }
 
 void CalshtDW::initialize() {
     std::filesystem::path module_path = get_module_path();
-    std::filesystem::path data_dir = module_path.parent_path() / "data";
+    std::filesystem::path data_dir = resolve_data_dir(module_path);
 
     read_file(mp1.begin(), mp1.end(), data_dir / "index_dw_s.bin");
     read_file(mp2.begin(), mp2.end(), data_dir / "index_dw_h.bin");
