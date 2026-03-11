@@ -2,58 +2,105 @@
 
 [English](README.md) | [日本語](README.ja.md)
 
-`pymahjong` is a Python binding for fast mahjong hand processing, shanten calculation, win detection, and action-option evaluation. The core logic is implemented in C++ and exposed through `pybind11`.
+`pymahjong` is a low-level Python binding for mahjong hand logic implemented in C++. It focuses on fast primitives for hand state, shanten calculation, win evaluation, and action-option queries.
 
-The project is currently best suited as a low-level toolkit for mahjong AI, rules engines, and tile-efficiency experiments.
+This repository is a good fit when you are building:
 
-## Features
+- a mahjong AI or simulator
+- a rules engine
+- tile-efficiency or hand-analysis tooling
 
-- Represent hands with open melds and red-tile state
-- Compute shanten and effective waits
-- Evaluate winning hands, fu, han, and yakuman
-- Compute self-action option masks such as tsumo, riichi, ankan, kakan, and nine terminals abort
-- Compute reaction masks for chi, pon, ron, and open kan
-- Support both four-player and three-player rule paths
+## What This Library Does
+
+- Represent a hand with closed tiles, open melds, and red-tile state
+- Compute shanten and wait masks
+- Evaluate a win and return fu, han, yakuman, and yaku names
+- Answer "what can the current player do now?"
+- Answer "who can react to this discard or kan?"
+- Support both four-player and three-player paths
+
+## Before You Read the API
+
+Most APIs use the same conventions.
+
+### Tile indices
+
+Tiles use a 34-index layout:
+
+- `0-8`: `m1-m9`
+- `9-17`: `p1-p9`
+- `18-26`: `s1-s9`
+- `27-33`: `east, south, west, north, white, green, red`
+
+### Winds
+
+- `zhuangfeng`: round wind
+- `lunban`: seat wind of the acting or winning player
+
+Wind encoding is:
+
+- `0 = east`
+- `1 = south`
+- `2 = west`
+- `3 = north`
+
+### Bit masks
+
+Bit masks use bit `n` for tile index `n`.
+
+Examples:
+
+- a wait mask tells you which draws complete a tenpai hand
+- `SELF_OPT_*` flags tell you what the current player can do
+- `REACT_OPT_*` flags tell you how another player can react
 
 ## Installation
 
-The build requires a C++17-capable compiler, CMake, and `pybind11`.
+Build requirements:
+
+- C++17-capable compiler
+- CMake
+- `pybind11`
+
+Install:
 
 ```bash
 python3 -m pip install .
 ```
 
-For editable install with test dependencies:
+Editable install with test dependencies:
 
 ```bash
 python3 -m pip install -e .[test]
 ```
 
-## Quick Start
+## Typical Workflows
 
-### Build a hand
+### 1. Work with a mutable hand: `Shoupai`
 
-Hands are passed as a length-34 tile-count sequence.
+Use `Shoupai` when you want an object you can update over time.
 
 ```python
 import pymahjong as pm
 
 counts = [0] * 34
-counts[0] = 1   # 1m
-counts[1] = 1   # 2m
-counts[2] = 1   # 3m
-counts[9] = 2   # pair of 1p
+counts[0] = 1
+counts[1] = 1
+counts[2] = 1
+counts[9] = 2
 
-shoupai = pm.Shoupai(tuple(counts))
-shoupai.update()
+hand = pm.Shoupai(tuple(counts))
+hand.update()
 
-print(shoupai.xiangting)
-print(shoupai.tingpai_list())
+print(hand.xiangting)
+print(hand.tingpai_list())
 ```
 
-### Calculate shanten
+Use this path if your application keeps a live game state.
 
-`Xiangting.calculate()` returns `(shanten, mode, discard_mask, wait_mask)`.
+### 2. Get shanten quickly: `Xiangting`
+
+Use `Xiangting` when you want a fast stateless solver call on raw tile counts.
 
 ```python
 import pymahjong as pm
@@ -62,8 +109,8 @@ counts = [0] * 34
 counts[0] = counts[1] = counts[2] = 1
 counts[9] = counts[10] = counts[11] = 1
 counts[18] = counts[19] = counts[20] = 1
-counts[27] += 2
-counts[31] += 2
+counts[27] = 2
+counts[31] = 2
 
 x = pm.Xiangting()
 shanten, mode, discard_mask, wait_mask = x.calculate(
@@ -75,15 +122,16 @@ shanten, mode, discard_mask, wait_mask = x.calculate(
 )
 ```
 
-Arguments:
+Returned values:
 
-- `hand`: length-34 tile counts
-- `size`: number of meld slots to complete, typically `4` for a standard hand
-- `mode`: search mode used by the solver
-- `check_hand`: validate tile-count legality before solving
-- `three_player`: enable three-player rules
+- `shanten`: current shanten number
+- `mode`: internal solver mode
+- `discard_mask`: candidate discard tiles
+- `wait_mask`: effective draws after the best discard logic
 
-### Evaluate a winning hand
+### 3. Evaluate a win: `Hule`
+
+Use `Hule` when you already know the winning tile and want scoring information.
 
 ```python
 import pymahjong as pm
@@ -101,20 +149,21 @@ counts[32] = 3
 
 option = pm.HuleOption(0, 0)
 option.is_menqian = True
-option.is_lizhi = False
 
-hule = pm.Hule(
+result = pm.Hule(
     pm.Shoupai(tuple(counts)),
     pm.Action(pm.ActionType.ronghu, 10),
     option,
 )
 
-print(hule.has_hupai)
-print(hule.fu, hule.fanshu)
-print(hule.hupai.tolist())
+print(result.has_hupai)
+print(result.fu, result.fanshu, result.damanguan)
+print(result.hupai.tolist())
 ```
 
-### Compute self action options
+### 4. Ask what actions are available now
+
+Use `compute_self_option_mask()` after a draw.
 
 ```python
 import pymahjong as pm
@@ -144,119 +193,129 @@ can_tsumo = bool(mask & pm.SELF_OPT_TSUMO)
 can_riichi = bool(mask & pm.SELF_OPT_RIICHI)
 ```
 
-## Main API
+## How To Choose an API
 
-Conventions used throughout the API:
+- Use `Shoupai` if your program maintains a mutable hand object.
+- Use `Xiangting.calculate()` if you only need fast shanten and waits from raw counts.
+- Use `Hule` if you need fu, han, yaku, and yakuman details.
+- Use `wait_mask()` if you only want waits for a tenpai hand.
+- Use `has_hupai()` if you only need a yes or no win check.
+- Use `compute_self_option_mask()` and `compute_reaction_option_masks()` for game-flow logic.
 
-- Tile indices use a 34-tile layout: `0-8 = m1-m9`, `9-17 = p1-p9`, `18-26 = s1-s9`, `27-33 = east, south, west, north, white, green, red`.
-- `zhuangfeng` is the round wind as `0=east`, `1=south`, `2=west`, `3=north`.
-- `lunban` is the player's seat wind in the same encoding, not an absolute seat id.
-- Bit masks use bit `n` to represent tile index `n`.
+## Main Types
 
 ### `Shoupai`
 
-Represents a hand state.
+Mutable hand state.
 
-- `Shoupai(bing)`: construct from a length-34 closed-hand count array
-- `Shoupai(bing, fulu)`: construct from counts plus a list of melds
-- `bing`: tile counts
-- `fulu`: open meld list as `Mianzi` objects
-- `xiangting`: cached shanten value after `update()`
-- `mode`: cached solver mode
-- `tingpai`: 34-bit wait mask exposed as an integer
-- `red`: 3-bit red-tile mask exposed as an integer, one bit per suit for red 5m, 5p, 5s
-- `apply(action)`: mutate the hand by applying an `Action`
-- `update()`: recompute cached shanten and waits
-- `tingpai_mask()`: return wait mask as an integer
-- `tingpai_list()`: return wait tiles as a Python list
+Constructor forms:
 
-Use this when you want a mutable object-oriented hand representation instead of passing raw tuples to stateless helpers.
+- `Shoupai(bing)`
+- `Shoupai(bing, fulu)`
+
+Important fields and methods:
+
+- `bing`: closed tile counts as a length-34 array
+- `fulu`: open melds as a list of `Mianzi`
+- `xiangting`: cached shanten after `update()`
+- `mode`: cached solver mode after `update()`
+- `tingpai`: wait mask as an integer
+- `red`: red-five state as a 3-bit integer for manzu, pinzu, souzu
+- `apply(action)`: mutates the hand by applying an `Action`
+- `update()`: recomputes `xiangting`, `mode`, and `tingpai`
+- `tingpai_mask()`: returns the wait mask
+- `tingpai_list()`: returns wait tile indices as a Python list
+
+`Shoupai` is the right abstraction when you are simulating draws, discards, calls, and state transitions.
 
 ### `Xiangting`
 
-Shanten solver entry point.
+Stateless shanten solver wrapper.
+
+Primary method:
 
 - `calculate(hand, size, mode, check_hand=False, three_player=False)`
 
-Returns a tuple of:
+Argument meaning:
 
-- `shanten`: current shanten number
-- `mode`: internal resolution mode selected by the solver
-- `discard_mask`: bit mask of tiles that are valid discard candidates
-- `wait_mask`: bit mask of effective draws after the best discard logic
+- `hand`: length-34 tile counts
+- `size`: number of meld slots still to complete
+- `mode`: solver mode used by the native implementation
+- `check_hand`: validates impossible tile totals before solving
+- `three_player`: switches to the sanma logic path
 
-In practice, this is the low-level solver API. `size` is usually `4` for a standard concealed hand, and decreases implicitly when you already have open melds.
+For a standard hand, `size` is usually `4`. If you already have open melds, the effective remaining meld count is smaller.
 
 ### `HuleOption`
 
-Carries rule and situation flags for hand evaluation.
+Round-context flags used by win evaluation.
 
 Important fields:
 
-- `is_menqian`
-- `is_lizhi`
-- `is_shuanglizhi`
-- `is_yifa`
-- `is_haidi`
-- `is_lingshang`
-- `is_qianggang`
-- `is_init_turn_and_no_call`
-- `zhuangfeng`
-- `lunban`
-
-Field meaning:
-
-- `is_menqian`: the hand is closed
-- `is_lizhi`: riichi was declared
-- `is_shuanglizhi`: double riichi was declared
-- `is_yifa`: ippatsu is still active
-- `is_haidi`: last live tile draw or last discard situation
-- `is_lingshang`: the win is on a rinshan draw
-- `is_qianggang`: the win is by robbing a kan
-- `is_init_turn_and_no_call`: still the uninterrupted first go-around, used for tenhou/chiihou style checks
+- `is_menqian`: hand is closed
+- `is_lizhi`: riichi declared
+- `is_shuanglizhi`: double riichi declared
+- `is_yifa`: ippatsu still active
+- `is_haidi`: last-draw or last-discard win situation
+- `is_lingshang`: rinshan win
+- `is_qianggang`: chankan win
+- `is_init_turn_and_no_call`: first uninterrupted go-around, used for tenhou/chiihou style checks
 - `zhuangfeng`: round wind
-- `lunban`: winner's seat wind
+- `lunban`: seat wind of the winner
 
-Set these before constructing `Hule`. This object carries table context rather than hand shape.
+This object describes table context, not hand shape.
 
 ### `Hule`
 
-Represents the result of a win evaluation.
+Win evaluation result.
+
+Constructor:
 
 - `Hule(shoupai, action, option)`
-- `has_hupai`: whether the hand is actually winning
-- `fu`: fu value
-- `fanshu`: han value
-- `damanguan`: yakuman multiplier count
-- `hupai`: `Hupai` object containing named yaku flags
-- `is_zimohu`: whether the evaluation was tsumo-based
-- `hule_pai`: winning tile index
 
-`Hule` evaluates the best available interpretation of the hand shape, including fu calculation and yaku selection. For readable yaku output, use `hule.hupai.tolist()`, which returns `(name, han)` pairs.
+Important outputs:
+
+- `has_hupai`: whether the hand is valid as a win
+- `fu`: fu count
+- `fanshu`: han count
+- `damanguan`: yakuman multiplier count
+- `hupai`: `Hupai` object with named yaku flags
+- `hule_pai`: winning tile index
+- `is_zimohu`: whether the result was evaluated as tsumo
+
+Use `hupai.tolist()` when you want readable `(name, han)` output.
 
 ### `Mianzi`
 
-Represents a meld or block.
+Represents one meld or block.
+
+Constructor forms:
 
 - `Mianzi(MianziType, pai_34)`
 - `Mianzi(FuluType, pai_34)`
-- `type`: sequence, triplet, or pair type
-- `fulu_type`: chi, pon, open kan, closed kan, or none
-- `pai_34`: base tile index. For a sequence this is the lowest tile, for a pon/kan/pair it is the repeated tile
 
-Useful when building open hands manually.
+Important fields:
+
+- `type`: sequence, triplet, or pair
+- `fulu_type`: chi, pon, open kan, closed kan, or none
+- `pai_34`: base tile index
+
+Meaning of `pai_34`:
+
+- for a sequence, it is the lowest tile
+- for a pair, pon, or kan, it is the repeated tile
 
 ### `Action`
 
-Represents a player action.
+Represents one action applied to a hand or one winning event.
 
-Constructors:
+Constructor forms:
 
 - `Action(ActionType, pai_34)`
 - `Action(ActionType, pai_34, red)`
 - `Action(ActionType, pai_34, red, bias)`
 
-Common `ActionType` values:
+Common action types:
 
 - `zimo`
 - `dapai`
@@ -269,45 +328,50 @@ Common `ActionType` values:
 - `zimohu`
 - `ronghu`
 
-Field meaning:
+Important fields:
 
-- `pai_34`: tile index the action refers to
-- `red`: whether the acted tile is a red five
-- `bias`: sequence offset used by `chi`; if the called tile is the middle tile of a sequence this is typically `1`
+- `pai_34`: tile touched by the action
+- `red`: whether that tile is a red five
+- `bias`: sequence offset used for `chi`
 
-Use `Action` with `Shoupai.apply()` and `Hule(...)`. In practice, `bias` only matters for `chi`.
+`bias` matters mainly for `chi`. It tells the hand which position the called tile occupies inside the sequence.
 
-### Stateless helper functions
+## Main Helper Functions
+
+### Hand-state helpers
 
 - `wait_mask(hand, meld_count, three_player=False)`
-  Returns the wait mask for the given hand shape. It only returns non-zero when the hand is already in tenpai.
+  Returns the wait mask for a tenpai hand. Non-tenpai shapes return `0`.
 - `has_riichi_discard(hand, meld_count, three_player=False)`
-  Returns whether at least one discard leaves the hand in tenpai, which is the key precondition for riichi.
-- `has_hupai(hand, melds, win_tile, is_tsumo, is_menqian, is_riichi, zhuangfeng, lunban, is_haidi, is_lingshang, is_qianggang)`
-  Returns whether the specified win condition is valid.
+  Returns whether at least one discard leaves the hand in tenpai.
+- `has_hupai(...)`
+  Returns whether a specific win setup is valid.
 - `evaluate_draw(...)`
   Returns `(can_tsumo, can_riichi_discard)` for a draw event.
+
+### Game-flow helpers
+
 - `compute_self_option_mask(...)`
-  Returns a bit mask of actions available to the current player after drawing a tile.
-- `compute_reaction_option_masks(players, discarder, tile_idx, zhuangfeng, dealer_seat, live_draws_left, last_draw_was_gangzimo, three_player=False)`
-  Returns a list of `(seat, mask)` pairs for reactions to a discard.
+  Returns what the current player can do after drawing.
+- `compute_reaction_option_masks(...)`
+  Returns `(seat, mask)` pairs for reactions to a discard.
 - `compute_rob_kan_option_masks(...)`
-  Returns reaction masks for robbing a kan.
+  Returns `(seat, mask)` pairs for reactions to a kan.
 
-Important inputs for the option-mask helpers:
+Inputs that often confuse readers:
 
-- `meld_count`: number of already-open melds in the hand
-- `open_melds`: number of open melds; used to decide whether riichi or menzen-only checks apply
+- `meld_count`: current number of melds already formed in the hand
+- `open_melds`: number of open melds; used for menzen and riichi checks
 - `closed_kans`: number of concealed kans already present
-- `open_pon_tiles`: tile indices for pon melds that could potentially be upgraded to kakan
-- `is_first_turn`: whether the table is still on the first uninterrupted turn
-- `first_turn_open_calls_seen`: whether any open call has already broken the first-turn state
-- `players` in reaction helpers: per-player tuples including hand, melds, riichi/furiten state, furiten mask, and open meld count
-- `dealer_seat`: absolute seat index of the dealer, used to convert seats into `lunban` wind values during win checks
+- `open_pon_tiles`: tile indices of pon melds that may be upgraded to kakan
+- `is_first_turn`: whether the hand is still in the first uninterrupted round of turns
+- `first_turn_open_calls_seen`: whether any open call has already broken that first-turn state
+- `dealer_seat`: absolute dealer seat index, used internally to derive each player's seat wind
+- `players`: per-player tuples carrying hand state plus riichi and furiten context
 
-### Bit-mask constants
+## Constants
 
-Self options:
+Self-action bits:
 
 - `SELF_OPT_TSUMO`
 - `SELF_OPT_RIICHI`
@@ -316,26 +380,30 @@ Self options:
 - `SELF_OPT_KYUSHUKYUHAI`
 - `SELF_OPT_PENUKI`
 
-Reaction options:
+Reaction bits:
 
 - `REACT_OPT_RON`
 - `REACT_OPT_CHI`
 - `REACT_OPT_PON`
 - `REACT_OPT_MINKAN`
 
+## Repository Layout
+
+- `src/bindings.cpp`: Python bindings and helper entry points
+- `src/calsht_dw.cpp`: shanten logic
+- `src/hule.hpp`: win evaluation and scoring
+- `src/shoupai.hpp`: mutable hand representation
+- `tests/test_regressions.py`: regression tests
+
 ## Development
 
-Run tests with:
+Run tests:
 
 ```bash
 python3 -m pytest
 ```
 
-Build configuration lives in `CMakeLists.txt` and `setup.py`. Package data includes `data/index_dw_s.bin` and `data/index_dw_h.bin`.
+## Notes
 
-## Repository Guide
-
-- `src/bindings.cpp`: Python bindings
-- `src/calsht_dw.cpp`: shanten logic
-- `pymahjong/__init__.py`: Python package entry point
-- `tests/test_regressions.py`: regression tests
+- This is intentionally a low-level API. Most applications should build a small wrapper layer on top.
+- The README documents conventions and usage, but not every internal solver mode.

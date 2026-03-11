@@ -2,58 +2,103 @@
 
 [English](README.md) | [日本語](README.ja.md)
 
-`pymahjong` は、麻雀の手牌処理、シャンテン計算、和了判定、行動可能判定を高速に行うための Python バインディングです。コアロジックは C++ で実装され、`pybind11` 経由で Python から利用できます。
+`pymahjong` は、麻雀の手牌ロジックを C++ で実装し、Python から使えるようにした低レイヤのバインディングです。主な対象は、手牌状態、シャンテン計算、和了判定、行動可能判定です。
 
-現状の位置づけとしては、麻雀 AI、ルールエンジン、牌効率検証などで使う低レイヤ寄りのツールキットです。
+向いている用途:
 
-## 主な機能
+- 麻雀 AI やシミュレータ
+- ルールエンジン
+- 牌効率や手牌解析ツール
 
-- 副露や赤牌状態を含む手牌表現
-- シャンテン数と有効牌の計算
-- 和了判定、符、翻、役満の評価
-- ツモ時に選択可能な行動のビットマスク計算
-- 打牌に対するチー、ポン、ロン、明槓などの反応可能判定
-- 四麻と三麻の両方のルール分岐に対応
+## 何ができるか
+
+- 閉じた手牌、副露、赤牌状態をまとめて表現する
+- シャンテン数と待ち牌マスクを計算する
+- 和了の成立、符、翻、役満、役一覧を評価する
+- 今の手番プレイヤーが何を選べるかを判定する
+- 打牌や槓に対して誰がどう反応できるかを判定する
+- 四麻と三麻の両方に対応する
+
+## API を読む前の前提
+
+ほとんどの API は同じ前提で動きます。
+
+### 牌インデックス
+
+牌は 34 種インデックスで表現します。
+
+- `0-8`: `m1-m9`
+- `9-17`: `p1-p9`
+- `18-26`: `s1-s9`
+- `27-33`: `東, 南, 西, 北, 白, 發, 中`
+
+### 風の表現
+
+- `zhuangfeng`: 場風
+- `lunban`: 行動者または和了者の自風
+
+エンコードは次の通りです。
+
+- `0 = 東`
+- `1 = 南`
+- `2 = 西`
+- `3 = 北`
+
+### ビットマスク
+
+ビットマスクでは bit `n` が牌インデックス `n` を表します。
+
+例:
+
+- 待ち牌マスクは、どの牌を引けばテンパイ手が和了するかを示します
+- `SELF_OPT_*` は手番プレイヤーの選択肢を示します
+- `REACT_OPT_*` は他家の反応可能行動を示します
 
 ## インストール
 
-ビルドには C++17 対応コンパイラ、CMake、`pybind11` が必要です。
+ビルドに必要なもの:
+
+- C++17 対応コンパイラ
+- CMake
+- `pybind11`
+
+インストール:
 
 ```bash
 python3 -m pip install .
 ```
 
-テスト依存込みで editable install する場合:
+テスト依存込みの editable install:
 
 ```bash
 python3 -m pip install -e .[test]
 ```
 
-## クイックスタート
+## 典型的な使い方
 
-### 手牌を作る
+### 1. ミュータブルな手牌を持つ: `Shoupai`
 
-手牌は長さ 34 の牌カウント配列で渡します。
+ゲーム進行に合わせて手牌オブジェクトを更新したいなら `Shoupai` を使います。
 
 ```python
 import pymahjong as pm
 
 counts = [0] * 34
-counts[0] = 1   # 1m
-counts[1] = 1   # 2m
-counts[2] = 1   # 3m
-counts[9] = 2   # 1p の対子
+counts[0] = 1
+counts[1] = 1
+counts[2] = 1
+counts[9] = 2
 
-shoupai = pm.Shoupai(tuple(counts))
-shoupai.update()
+hand = pm.Shoupai(tuple(counts))
+hand.update()
 
-print(shoupai.xiangting)
-print(shoupai.tingpai_list())
+print(hand.xiangting)
+print(hand.tingpai_list())
 ```
 
-### シャンテン数を計算する
+### 2. シャンテン数だけ素早く引く: `Xiangting`
 
-`Xiangting.calculate()` は `(shanten, mode, discard_mask, wait_mask)` を返します。
+生の牌カウントから高速にシャンテン計算したいなら `Xiangting` を使います。
 
 ```python
 import pymahjong as pm
@@ -62,8 +107,8 @@ counts = [0] * 34
 counts[0] = counts[1] = counts[2] = 1
 counts[9] = counts[10] = counts[11] = 1
 counts[18] = counts[19] = counts[20] = 1
-counts[27] += 2
-counts[31] += 2
+counts[27] = 2
+counts[31] = 2
 
 x = pm.Xiangting()
 shanten, mode, discard_mask, wait_mask = x.calculate(
@@ -75,15 +120,16 @@ shanten, mode, discard_mask, wait_mask = x.calculate(
 )
 ```
 
-引数:
+返り値:
 
-- `hand`: 長さ 34 の牌カウント
-- `size`: 完成させる面子数。通常手なら `4`
-- `mode`: ソルバの探索モード
-- `check_hand`: 手牌枚数の妥当性を事前検証するか
-- `three_player`: 三麻ルールを使うか
+- `shanten`: 現在のシャンテン数
+- `mode`: ソルバ内部モード
+- `discard_mask`: 打牌候補のマスク
+- `wait_mask`: 最善打牌考慮後の有効牌マスク
 
-### 和了判定をする
+### 3. 和了を評価する: `Hule`
+
+和了牌が分かっていて、符・翻・役まで見たいなら `Hule` を使います。
 
 ```python
 import pymahjong as pm
@@ -101,20 +147,21 @@ counts[32] = 3
 
 option = pm.HuleOption(0, 0)
 option.is_menqian = True
-option.is_lizhi = False
 
-hule = pm.Hule(
+result = pm.Hule(
     pm.Shoupai(tuple(counts)),
     pm.Action(pm.ActionType.ronghu, 10),
     option,
 )
 
-print(hule.has_hupai)
-print(hule.fu, hule.fanshu)
-print(hule.hupai.tolist())
+print(result.has_hupai)
+print(result.fu, result.fanshu, result.damanguan)
+print(result.hupai.tolist())
 ```
 
-### ツモ時の行動可能判定を調べる
+### 4. 今の選択肢を調べる
+
+ツモ直後に何ができるかを知りたいなら `compute_self_option_mask()` を使います。
 
 ```python
 import pymahjong as pm
@@ -144,111 +191,121 @@ can_tsumo = bool(mask & pm.SELF_OPT_TSUMO)
 can_riichi = bool(mask & pm.SELF_OPT_RIICHI)
 ```
 
-## 主要 API
+## どの API を使うべきか
 
-API 全体で使う前提:
+- 手番進行に合わせて手牌を更新したいなら `Shoupai`
+- 生の牌カウントからシャンテン数だけ欲しいなら `Xiangting.calculate()`
+- 符・翻・役まで欲しいなら `Hule`
+- テンパイ手の待ちだけ欲しいなら `wait_mask()`
+- 和了成立の真偽だけ欲しいなら `has_hupai()`
+- 対局進行の選択肢判定をしたいなら `compute_self_option_mask()` と `compute_reaction_option_masks()`
 
-- 牌インデックスは 34 種表現です。`0-8 = m1-m9`, `9-17 = p1-p9`, `18-26 = s1-s9`, `27-33 = 東, 南, 西, 北, 白, 發, 中`。
-- `zhuangfeng` は場風で、`0=東`, `1=南`, `2=西`, `3=北` です。
-- `lunban` はプレイヤーの自風で、同じく `0=東`, `1=南`, `2=西`, `3=北` です。絶対 seat 番号そのものではありません。
-- ビットマスクは bit `n` が牌インデックス `n` に対応します。
+## 主な型
 
 ### `Shoupai`
 
-手牌状態を表すクラスです。
+ミュータブルな手牌状態です。
 
-- `Shoupai(bing)`: 閉じた手牌の 34 牌カウントから生成
-- `Shoupai(bing, fulu)`: 牌カウントと副露リストから生成
-- `bing`: 手牌カウント
-- `fulu`: `Mianzi` オブジェクトの副露リスト
-- `xiangting`: `update()` 後に保持されるシャンテン数
-- `mode`: 更新時に使われたモード
-- `tingpai`: 34 ビットの待ち牌マスクを整数として exposed
-- `red`: 3 ビットの赤牌マスクを整数として exposed。各 bit は赤 5m, 赤 5p, 赤 5s に対応
+コンストラクタ:
+
+- `Shoupai(bing)`
+- `Shoupai(bing, fulu)`
+
+主なフィールドとメソッド:
+
+- `bing`: 閉じた手牌の 34 牌カウント
+- `fulu`: `Mianzi` の副露リスト
+- `xiangting`: `update()` 後のシャンテン数
+- `mode`: `update()` 後のソルバモード
+- `tingpai`: 待ち牌マスク
+- `red`: 赤 5m, 赤 5p, 赤 5s を表す 3 ビット整数
 - `apply(action)`: `Action` を適用して手牌を更新
-- `update()`: シャンテン数と待ち牌情報を再計算
-- `tingpai_mask()`: 待ち牌マスクを整数で返す
-- `tingpai_list()`: 待ち牌インデックスを Python リストで返す
+- `update()`: `xiangting`, `mode`, `tingpai` を再計算
+- `tingpai_mask()`: 待ち牌マスクを返す
+- `tingpai_list()`: 待ち牌インデックスのリストを返す
 
-生のタプルを毎回関数に渡すより、ミュータブルな手牌オブジェクトとして扱いたいときに使います。
+局進行の中でツモ、打牌、鳴き、加槓などを反映しながら手牌を持ち回したいときの中心になります。
 
 ### `Xiangting`
 
-シャンテン計算器です。
+ステートレスなシャンテンソルバの入口です。
+
+主なメソッド:
 
 - `calculate(hand, size, mode, check_hand=False, three_player=False)`
 
-返り値の内容:
+引数の意味:
 
-- `shanten`: 現在のシャンテン数
-- `mode`: ソルバ内部で選択された解決モード
-- `discard_mask`: 打牌候補のビットマスク
-- `wait_mask`: 最善打牌考慮後の有効牌ビットマスク
+- `hand`: 長さ 34 の牌カウント
+- `size`: これから完成させる面子数
+- `mode`: ネイティブ実装側のソルバモード
+- `check_hand`: ありえない牌枚数を事前検証するか
+- `three_player`: 三麻ロジックに切り替えるか
 
-実質的には低レイヤのシャンテンソルバです。`size` は通常手なら `4` を使い、副露がある場合はその分だけ完成させる面子数が減る前提です。
+通常手なら `size` はだいたい `4` です。副露済みの面子があるなら、その分だけ残り面子数は小さくなります。
 
 ### `HuleOption`
 
-和了判定に必要な状況フラグを保持します。
+和了判定に必要な局面コンテキストです。
 
 主なフィールド:
-
-- `is_menqian`
-- `is_lizhi`
-- `is_shuanglizhi`
-- `is_yifa`
-- `is_haidi`
-- `is_lingshang`
-- `is_qianggang`
-- `is_init_turn_and_no_call`
-- `zhuangfeng`
-- `lunban`
-
-各フィールドの意味:
 
 - `is_menqian`: 門前か
 - `is_lizhi`: 立直しているか
 - `is_shuanglizhi`: ダブル立直か
 - `is_yifa`: 一発が有効か
-- `is_haidi`: 海底摸月または河底撈魚の局面か
-- `is_lingshang`: 嶺上開花のツモか
+- `is_haidi`: 海底または河底の局面か
+- `is_lingshang`: 嶺上開花か
 - `is_qianggang`: 槍槓か
-- `is_init_turn_and_no_call`: まだ誰も鳴いていない最初の一巡目か。天和・地和判定に使われます
+- `is_init_turn_and_no_call`: 鳴きの入っていない最初の一巡目か。天和・地和系判定に使う
 - `zhuangfeng`: 場風
 - `lunban`: 和了者の自風
 
-`Hule` を作る前にこれらを設定します。手牌形そのものではなく、局面コンテキストを持つオブジェクトです。
+これは手牌形ではなく、卓上状況を表すオブジェクトです。
 
 ### `Hule`
 
-和了評価結果を表します。
+和了評価結果です。
+
+コンストラクタ:
 
 - `Hule(shoupai, action, option)`
-- `has_hupai`: 和了形として成立しているか
-- `fu`: 符
+
+主な出力:
+
+- `has_hupai`: 和了として成立しているか
+- `fu`: 符数
 - `fanshu`: 翻数
 - `damanguan`: 役満倍率
-- `hupai`: 役情報を持つ `Hupai`
-- `is_zimohu`: ツモ和了として評価されたか
+- `hupai`: 役フラグを持つ `Hupai`
 - `hule_pai`: 和了牌インデックス
+- `is_zimohu`: ツモとして評価されたか
 
-`Hule` は手牌の分解候補を評価して、最も良い和了形を選びます。役を人間向けに確認したい場合は `hule.hupai.tolist()` が便利で、`(役名, 翻数)` の一覧を返します。
+役を読みやすく出したいなら `hupai.tolist()` を使います。
 
 ### `Mianzi`
 
-面子や副露を表現します。
+1 つの面子またはブロックを表します。
+
+コンストラクタ:
 
 - `Mianzi(MianziType, pai_34)`
 - `Mianzi(FuluType, pai_34)`
-- `type`: 順子、刻子、対子の種類
-- `fulu_type`: チー、ポン、明槓、暗槓、なし
-- `pai_34`: 基準牌インデックス。順子なら下の牌、刻子・槓子・対子ならその牌自身
 
-副露を含む手牌を手動で構築するときに使います。
+主なフィールド:
+
+- `type`: 順子、刻子、対子
+- `fulu_type`: チー、ポン、明槓、暗槓、なし
+- `pai_34`: 基準牌インデックス
+
+`pai_34` の意味:
+
+- 順子なら一番下の牌
+- 対子、ポン、槓なら重なっている牌そのもの
 
 ### `Action`
 
-プレイヤーの行動を表します。
+手牌に適用する行動、または和了イベントを表します。
 
 コンストラクタ:
 
@@ -256,7 +313,7 @@ API 全体で使う前提:
 - `Action(ActionType, pai_34, red)`
 - `Action(ActionType, pai_34, red, bias)`
 
-主な `ActionType`:
+よく使う `ActionType`:
 
 - `zimo`
 - `dapai`
@@ -269,45 +326,50 @@ API 全体で使う前提:
 - `zimohu`
 - `ronghu`
 
-フィールドの意味:
+主なフィールド:
 
-- `pai_34`: その行動が対象にする牌インデックス
-- `red`: 対象牌が赤 5 か
-- `bias`: `chi` 時の並び位置を表すオフセット。鳴いた牌が順子の真ん中なら通常 `1`
+- `pai_34`: 対象牌インデックス
+- `red`: その牌が赤 5 か
+- `bias`: `chi` のときに鳴いた牌が順子のどこに入るかを示すオフセット
 
-`Shoupai.apply()` や `Hule(...)` と組み合わせて使います。実質的に `bias` が重要なのは `chi` のときです。
+`bias` が実質的に重要なのは `chi` のときです。
 
-### ステートレス補助関数
+## 主な補助関数
+
+### 手牌状態向け
 
 - `wait_mask(hand, meld_count, three_player=False)`
-  指定手牌形の待ち牌マスクを返します。テンパイしていない手牌では 0 になります。
+  テンパイ手の待ち牌マスクを返します。テンパイしていなければ `0` です。
 - `has_riichi_discard(hand, meld_count, three_player=False)`
-  どれか 1 つ打牌すればテンパイになるかを返します。立直可能判定の前提チェックです。
-- `has_hupai(hand, melds, win_tile, is_tsumo, is_menqian, is_riichi, zhuangfeng, lunban, is_haidi, is_lingshang, is_qianggang)`
+  どれか 1 牌切ればテンパイになるかを返します。
+- `has_hupai(...)`
   指定条件で和了成立するかを返します。
 - `evaluate_draw(...)`
   ツモ直後の `(can_tsumo, can_riichi_discard)` を返します。
+
+### 対局進行向け
+
 - `compute_self_option_mask(...)`
-  ツモ直後に現在手番プレイヤーが選べる行動のビットマスクを返します。
-- `compute_reaction_option_masks(players, discarder, tile_idx, zhuangfeng, dealer_seat, live_draws_left, last_draw_was_gangzimo, three_player=False)`
-  打牌に反応できる各プレイヤーの `(seat, mask)` 一覧を返します。
+  ツモ直後に手番プレイヤーが取れる行動を返します。
+- `compute_reaction_option_masks(...)`
+  打牌に対して各プレイヤーが取れる反応を `(seat, mask)` で返します。
 - `compute_rob_kan_option_masks(...)`
-  槍槓可能判定の反応マスクを返します。
+  槍槓に対する反応を `(seat, mask)` で返します。
 
-オプションマスク系で分かりにくい引数:
+分かりにくい引数:
 
-- `meld_count`: すでにある副露数
-- `open_melds`: 開いている副露数。門前判定や立直可否に使います
+- `meld_count`: 現在できている面子数
+- `open_melds`: 開いている副露数。門前判定や立直可否に使う
 - `closed_kans`: すでにある暗槓数
-- `open_pon_tiles`: すでにポンしていて加槓候補になりうる牌インデックス列
+- `open_pon_tiles`: 加槓候補になりうるポン牌のインデックス列
 - `is_first_turn`: まだ最初の一巡目か
-- `first_turn_open_calls_seen`: その一巡目中に鳴きが入っていないか
-- `players`: 各プレイヤーについて、手牌、面子、立直状態、振聴状態、振聴マスク、副露数などをまとめたタプル列
-- `dealer_seat`: 親の絶対 seat 番号。これを基準に各 seat の自風 `lunban` が計算されます
+- `first_turn_open_calls_seen`: その一巡目が鳴きで崩れていないか
+- `dealer_seat`: 親の絶対 seat 番号。これを基準に各 seat の自風が計算される
+- `players`: 手牌、立直状態、振聴状態などをまとめたプレイヤータプル列
 
-### ビットマスク定数
+## 定数
 
-自摸側の行動:
+自摸側の行動ビット:
 
 - `SELF_OPT_TSUMO`
 - `SELF_OPT_RIICHI`
@@ -316,12 +378,20 @@ API 全体で使う前提:
 - `SELF_OPT_KYUSHUKYUHAI`
 - `SELF_OPT_PENUKI`
 
-反応側の行動:
+反応側の行動ビット:
 
 - `REACT_OPT_RON`
 - `REACT_OPT_CHI`
 - `REACT_OPT_PON`
 - `REACT_OPT_MINKAN`
+
+## リポジトリ構成
+
+- `src/bindings.cpp`: Python バインディングと補助関数
+- `src/calsht_dw.cpp`: シャンテン計算
+- `src/hule.hpp`: 和了評価と点数計算
+- `src/shoupai.hpp`: ミュータブルな手牌表現
+- `tests/test_regressions.py`: 回帰テスト
 
 ## 開発
 
@@ -331,11 +401,7 @@ API 全体で使う前提:
 python3 -m pytest
 ```
 
-ビルド設定は `CMakeLists.txt` と `setup.py` にあります。パッケージデータとして `data/index_dw_s.bin` と `data/index_dw_h.bin` を含みます。
+## 補足
 
-## リポジトリ内の主要ファイル
-
-- `src/bindings.cpp`: Python バインディング
-- `src/calsht_dw.cpp`: シャンテン計算ロジック
-- `pymahjong/__init__.py`: Python パッケージのエントリポイント
-- `tests/test_regressions.py`: 回帰テスト
+- API は意図的に低レイヤです。実アプリでは薄いラッパを 1 層載せるのが自然です。
+- README では使い方と前提を優先しており、内部ソルバモードの詳細までは説明していません。
