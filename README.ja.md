@@ -405,3 +405,12 @@ python3 -m pytest
 
 - API は意図的に低レイヤです。実アプリでは薄いラッパを 1 層載せるのが自然です。
 - README では使い方と前提を優先しており、内部ソルバモードの詳細までは説明していません。
+
+## ライセンス
+
+`pymahjong` は `LGPL-3.0-only` です。
+
+この repository には
+[`tomohxx/shanten-number`](https://github.com/tomohxx/shanten-number)
+由来のシャンテン数計算コードが含まれており、こちらも LGPL v3 系です。
+詳細は [THIRD_PARTY.md](THIRD_PARTY.md) を参照してください。

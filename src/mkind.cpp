@@ -1,3 +1,5 @@
+// Derived from tomohxx/shanten-number, licensed under LGPL v3.
+
 #include <algorithm>
 #include <execution>
 #include <fstream>

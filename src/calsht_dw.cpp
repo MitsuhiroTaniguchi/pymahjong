@@ -1,3 +1,7 @@
+// Derived from tomohxx/shanten-number, licensed under LGPL v3.
+// This file includes local modifications for package integration and
+// packaged data lookup.
+
 #include "calsht_dw.hpp"
 #include "hash.hpp"
 #include <array>

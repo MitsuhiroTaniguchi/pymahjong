@@ -173,6 +173,7 @@ setup(
     author_email="michw.com.sub@gmail.com",
     description="fast mahjong tools written in c++ with pybind 11",
     long_description="",
+    license="LGPL-3.0-only",
     ext_modules=[CMakeExtension("pymahjong._core")],
     cmdclass={"build_ext": CMakeBuild, "build_py": BuildPy},
     zip_safe=False,

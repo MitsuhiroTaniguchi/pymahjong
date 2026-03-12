@@ -407,3 +407,11 @@ python3 -m pytest
 
 - This is intentionally a low-level API. Most applications should build a small wrapper layer on top.
 - The README documents conventions and usage, but not every internal solver mode.
+
+## License
+
+`pymahjong` is licensed under `LGPL-3.0-only`.
+
+This repository includes shanten-solver code derived from
+[`tomohxx/shanten-number`](https://github.com/tomohxx/shanten-number), which is
+also licensed under LGPL v3. See [THIRD_PARTY.md](THIRD_PARTY.md).

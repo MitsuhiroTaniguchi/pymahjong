@@ -1,0 +1,6 @@
+pymahjong is licensed under LGPL-3.0-only.
+
+This repository includes shanten-solver code derived from
+tomohxx/shanten-number (LGPL-3.0).
+
+See THIRD_PARTY.md for component-level attribution.
