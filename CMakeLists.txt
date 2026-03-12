@@ -14,7 +14,7 @@ target_include_directories(_core PRIVATE src)
 target_compile_features(_core PRIVATE cxx_std_17)
 
 if(MSVC)
-    target_compile_options(_core PRIVATE /W4)
+    target_compile_options(_core PRIVATE /W4 /utf-8)
 else()
     target_compile_options(_core PRIVATE
         $<$<CONFIG:Debug>:-O0 -g>
