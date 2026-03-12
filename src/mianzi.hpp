@@ -1,6 +1,9 @@
 #ifndef PYMAHJONG_MIANZI_HPP
 #define PYMAHJONG_MIANZI_HPP
 
+#include <cstdlib>
+#include <string>
+
 struct Mianzi {
     enum Type : uint8_t {
         shunzi, kezi, duizi
@@ -42,7 +45,7 @@ struct Mianzi {
                 s += "angang(";
                     break;
             default:
-                __builtin_unreachable();
+                std::abort();
             }
             s += "mpsz"[pai_34 / 9];
             s += std::to_string(n);

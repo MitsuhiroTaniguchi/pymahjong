@@ -5,10 +5,31 @@
 #include "shoupai.hpp"
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <vector>
 
 #include "action.hpp"
 #include "hupai.hpp"
+
+namespace pymahjong_detail {
+inline int popcount_u64(uint64_t value) {
+    int count = 0;
+    while (value != 0) {
+        count += static_cast<int>(value & 1uLL);
+        value >>= 1;
+    }
+    return count;
+}
+
+inline int countr_zero_u64(uint64_t value) {
+    int count = 0;
+    while ((value & 1uLL) == 0) {
+        value >>= 1;
+        ++count;
+    }
+    return count;
+}
+}  // namespace pymahjong_detail
 
 struct HuleOption {
     bool is_menqian=true;
@@ -46,7 +67,7 @@ struct Hule {
             return;
         }
         if (p >= 34) return;
-        if (not shoupai.bing[p]) return search_normal_form(p + 1, head_specified);
+        if (!shoupai.bing[p]) return search_normal_form(p + 1, head_specified);
         if (p % 9 < 7 && p < 27 && shoupai.bing[p + 1] && shoupai.bing[p + 2]) {
             --shoupai.bing[p];
             --shoupai.bing[p + 1];
@@ -65,7 +86,7 @@ struct Hule {
             hand.pop_back();
             shoupai.bing[p] += 3;
         }
-        if (not head_specified && shoupai.bing[p] == 2) {
+        if (!head_specified && shoupai.bing[p] == 2) {
             shoupai.bing[p] -= 2;
             hand.emplace_back(Mianzi::duizi, p);
             search_normal_form(p + 1, true);
@@ -129,7 +150,7 @@ struct Hule {
                     case Mianzi::FuluType::none:
                         fu += 4 << is_19z;
                         ++ankezi;
-                        if (not is_zimohu && p == hule_pai) ron_kezi_fu_correction = 2 << is_19z;
+                        if (!is_zimohu && p == hule_pai) ron_kezi_fu_correction = 2 << is_19z;
                         break;
                     case Mianzi::minggang:
                         fu += 8 << is_19z;
@@ -141,7 +162,7 @@ struct Hule {
                         ++gangzi;
                         break;
                     default:
-                        __builtin_unreachable();
+                        std::abort();
                     }
                     break;
                 }
@@ -156,17 +177,17 @@ struct Hule {
             }
 
             bool danyi = head == hule_pai;
-            bool shanpon_ron = not is_zimohu && not liangmian && not qian && not bian && not danyi;
+            bool shanpon_ron = !is_zimohu && !liangmian && !qian && !bian && !danyi;
             if (shanpon_ron && ron_kezi_fu_correction) fu -= ron_kezi_fu_correction;
 
-            if ((h.七対子 = __builtin_popcountll(duizi) == 7)) fu = 25;
+            if ((h.七対子 = pymahjong_detail::popcount_u64(duizi) == 7)) fu = 25;
             else {
                 h.平和 = fu == 20 && shoupai.fulu.empty() && liangmian;
-                fu += 10 * (not is_zimohu && option.is_menqian);
-                if (not h.平和) {
+                fu += 10 * (!is_zimohu && option.is_menqian);
+                if (!h.平和) {
                     fu += 2 * (qian || bian || danyi);
                     fu += 2 * is_zimohu;
-                    if (not option.is_menqian && not is_zimohu && fu == 20) fu = 30;  // kuipinfu ron special case
+                    if (!option.is_menqian && !is_zimohu && fu == 20) fu = 30;  // kuipinfu ron special case
                     fu = (fu + 9) / 10 * 10;
                 }
             }
@@ -184,7 +205,7 @@ struct Hule {
             h.嶺上開花 = option.is_lingshang;
 
             h.海底摸月 = option.is_haidi && is_zimohu;
-            h.河底撈魚 = option.is_haidi && not is_zimohu;
+            h.河底撈魚 = option.is_haidi && !is_zimohu;
 
             h.混一色 = color == 0b1001 || color == 0b1010 || color == 0b1100;
             h.清一色 = color == 0b0001 || color == 0b0010 || color == 0b0100;
@@ -204,7 +225,7 @@ struct Hule {
                     (shunzi >> 18 & 0b111111101) == 0 &&
                     (kd >> 18 & 0b1011111101010001) == 0;
 
-            if (not h.七対子) {
+            if (!h.七対子) {
                 h.場風_東 = option.zhuangfeng == 0 && kezi >> 27 & 1;
                 h.場風_南 = option.zhuangfeng == 1 && kezi >> 28 & 1;
                 h.場風_西 = option.zhuangfeng == 2 && kezi >> 29 & 1;
@@ -246,7 +267,7 @@ struct Hule {
                 h.四槓子 = gangzi == 4;
 
                 if (h.清一色 && shoupai.fulu.empty()) {
-                    int i = __builtin_ctz(color) * 9;
+                    int i = pymahjong_detail::countr_zero_u64(color) * 9;
                     h.九蓮宝燈 =
                         shoupai.bing[i] >= 3 &&
                         shoupai.bing[i + 1] &&
@@ -285,7 +306,7 @@ struct Hule {
         if (shoupai.mode & 0b010) search_7duizi_form();
         if (shoupai.mode & 0b100) {
             hupai.国士無双 = shoupai.bing[hule_pai] == 1;
-            hupai.国士無双１３面 = not hupai.国士無双;
+            hupai.国士無双１３面 = !hupai.国士無双;
             hupai.is_menqian = true;
             fu = action.type == Action::zimohu ? 30 : 40;
             std::tie(fanshu, damanguan) = hupai.sum();
